@@ -94,7 +94,7 @@ def hillshade(elevation, azdeg=315, altdeg=45, vert_exag=1, dx=1, dy=1, fraction
                  np.cos(alt) * np.cos(slope) * np.cos(az - aspect))
 
     # Apply contrast stretch
-    imin, imax = intensity.min(), intensity.max()
+    # imin, imax = intensity.min(), intensity.max()
     intensity *= fraction
 
     # Rescale to 0-1, keeping range before contrast stretch

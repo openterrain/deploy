@@ -1,5 +1,6 @@
 import copy
 from collections import namedtuple
+import os
 from StringIO import StringIO
 
 import boto3
@@ -7,6 +8,7 @@ from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
+from rasterio._io import virtual_file_to_buffer
 
 Tile = namedtuple("Tile", "x y z")
 
@@ -24,6 +26,7 @@ RAMP = {
 }
 
 COLORMAP = LinearSegmentedColormap("darkmatter", RAMP)
+TMP_PATH = "/vsimem/tmp-{}".format(os.getpid())
 
 BUFFER = 2
 SRC_TILE_ZOOM = 14
@@ -113,6 +116,7 @@ def hillshade(elevation, azdeg=315, altdeg=45, vert_exag=1, dx=1, dy=1, fraction
 
 def handle(event, context):
     print "processing event:", event
+    s3 = boto3.resource('s3')
     zoom = int(event["params"]["path"]["z"])
     x = int(event["params"]["path"]["x"])
     y, format = event["params"]["path"]["y"].split(".")
@@ -131,10 +135,13 @@ def handle(event, context):
     dy = my - y
     top = (2**SRC_TILE_ZOOM * SRC_TILE_HEIGHT) - 1
 
-    if dz != -1:
-        # TODO implement zooms other than 15
-        print("Unmatched zooms aren't supported yet:", dz)
-        exit(1)
+    print("dz:", dz)
+    print("tile.x:", tile.x)
+    print("x:", x)
+    print("dx:", dx)
+    print("tile.y", tile.y)
+    print("y:", y)
+    print("dy:", dy)
 
     # y, x (rows, columns)
     window = [
@@ -197,26 +204,28 @@ def handle(event, context):
         )
         hs = (255.0 * hs).astype(np.uint8)
 
-        # meta = src.meta.copy()
-        # del meta["transform"]
-        # meta.update(
-        #     driver='GTiff',
-        #     dtype=rasterio.uint8,
-        #     compress="deflate",
-        #     predictor=1,
-        #     nodata=None,
-        #     tiled=True,
-        #     sparse_ok=True,
-        #     blockxsize=DST_BLOCK_SIZE,
-        #     blockysize=DST_BLOCK_SIZE,
-        #     height=DST_TILE_HEIGHT,
-        #     width=DST_TILE_WIDTH,
-        #     affine=src.window_transform(window)
-        # )
-        #
+        meta = src.meta.copy()
+        del meta["transform"]
+        meta.update(
+            driver='GTiff',
+            dtype=rasterio.uint8,
+            compress="deflate",
+            predictor=1,
+            nodata=None,
+            tiled=True,
+            sparse_ok=True,
+            blockxsize=DST_BLOCK_SIZE,
+            blockysize=DST_BLOCK_SIZE,
+            height=DST_TILE_HEIGHT,
+            width=DST_TILE_WIDTH,
+            affine=src.window_transform(window)
+        )
+
         # with rasterio.open("{}_{}_{}.tif".format(tile.z, tile.x, tile.y), "w", **meta) as dst:
         #     # ignore the border pixels when writing
         #     dst.write(hs[BUFFER:-BUFFER, BUFFER:-BUFFER], 1)
+        with rasterio.open(TMP_PATH, "w", **meta) as tmp:
+            tmp.write(hs[BUFFER:-BUFFER, BUFFER:-BUFFER], 1)
 
         out = StringIO()
         plt.imsave(
@@ -228,19 +237,23 @@ def handle(event, context):
             format=format,
         )
 
-        # plt.imsave(
-        #     "{}_{}_{}.png".format(tile.z, tile.x, tile.y),
-        #     hs[BUFFER:-BUFFER, BUFFER:-BUFFER],
-        #     cmap=COLORMAP,
-        #     vmin=0,
-        #     vmax=255,
-        #     format=format,
-        # )
-
-        s3 = boto3.resource('s3')
         # TODO make configurable
         bucket = "hillshades.openterrain.org"
-        key = "{}/{}/{}.{}".format(tile.z, tile.x, tile.y, format)
+        key = "darkmatter/{}/{}/{}.{}".format(tile.z, tile.x, tile.y, format)
+        hillshade_key = "3857/{}/{}/{}.tif".format(tile.z, tile.x, tile.y)
+
+        s3.Object(
+            bucket,
+            hillshade_key,
+        ).put(
+            Body=bytes(bytearray(virtual_file_to_buffer(TMP_PATH))),
+            ACL="public-read",
+            ContentType="image/tiff",
+            # TODO
+            CacheControl="",
+            StorageClass="REDUCED_REDUNDANCY",
+        )
+
         s3.Object(
             bucket,
             key,

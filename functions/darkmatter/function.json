@@ -1,0 +1,10 @@
+
+{
+  "description": "Hillshade generation",
+  "runtime": "python",
+  "memory": 320,
+  "timeout": 5,
+  "environment": {
+    "CPL_CURL_VERBOSE": "YES"
+  }
+}

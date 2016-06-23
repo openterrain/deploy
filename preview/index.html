@@ -1,0 +1,24 @@
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui" />
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
+<script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
+<style type="text/css">
+body, #map {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #303030;
+  // background-image: url(images/transparent.png);
+}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+  var map = L.map('map').setView([47.6190, -122.3529], 15);
+
+  L.tileLayer('http://hillshades.openterrain.org.s3-website-us-east-1.amazonaws.com/darkmatter/{z}/{x}/{y}.png').addTo(map);
+</script>
+</body>
+</html>

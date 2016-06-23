@@ -2,10 +2,10 @@ FROM lambci/lambda:build-python2.7
 
 # Install deps
 
-ADD automake16-1.6.3-18.6.amzn1.noarch.rpm /tmp
-ADD freetype-devel-2.3.11-15.14.amzn1.x86_64.rpm /tmp
-ADD libcurl-devel-7.40.0-8.54.amzn1.x86_64.rpm /tmp
-ADD libpng-devel-1.2.49-2.14.amzn1.x86_64.rpm /tmp
+ADD deps/automake16-1.6.3-18.6.amzn1.noarch.rpm /tmp
+ADD deps/freetype-devel-2.3.11-15.14.amzn1.x86_64.rpm /tmp
+ADD deps/libcurl-devel-7.40.0-8.54.amzn1.x86_64.rpm /tmp
+ADD deps/libpng-devel-1.2.49-2.14.amzn1.x86_64.rpm /tmp
 
 RUN \
   rpm -ivh /tmp/freetype-devel-2.3.11-15.14.amzn1.x86_64.rpm \
@@ -168,11 +168,3 @@ RUN \
     -x matplotlib/backends/backend_qt5agg.py \
     -x matplotlib/backends/backend_pdf.pyc \
     -r9 /tmp/task.zip *
-
-WORKDIR /tmp
-
-ADD mapzen.xml /tmp
-ADD main.py /tmp
-
-RUN \
-  zip -9 /tmp/task.zip main.py mapzen.xml

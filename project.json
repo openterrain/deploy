@@ -1,0 +1,13 @@
+
+{
+  "name": "openterrain",
+  "description": "",
+  "memory": 128,
+  "timeout": 5,
+  "role": "arn:aws:iam::247182545390:role/lambda_hillshade_execution",
+  "hooks": {
+    "build": "docker run --rm --entrypoint cat $(docker build -q ../..) /tmp/task.zip > task.zip && unzip -o task.zip && rm task.zip",
+    "clean": "rm -rf affine* click* cligj* cycler* enum* lib matplotlib* mpl_toolkits* numpy* pyparsing* pytz* rasterio* share snuggs* pylab*"
+  },
+  "environment": {}
+}

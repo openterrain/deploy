@@ -156,8 +156,11 @@ def handle(event, context):
     buffered_window[1][0] -= BUFFER
     buffered_window[1][1] += BUFFER
 
+    # TODO use XML @ zoom - 1 (since we can't explicitly load from overviews)
+    # OR use decimated reads, per https://github.com/mapbox/rasterio/issues/710
     with rasterio.open("mapzen.xml") as src:
-        data = src.read(1, window=buffered_window, masked=True)
+        data = np.empty(shape=(DST_TILE_WIDTH + 2 * BUFFER, DST_TILE_HEIGHT + 2 * BUFFER)).astype(src.profile["dtype"])
+        data = src.read(1, out=data, window=buffered_window)
         dx = abs(src.meta["affine"][0])
         dy = abs(src.meta["affine"][4])
 

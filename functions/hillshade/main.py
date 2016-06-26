@@ -27,3 +27,4 @@ def handle(event, context):
         }
     except:
         sentry.captureException()
+        raise

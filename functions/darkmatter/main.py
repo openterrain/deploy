@@ -64,8 +64,7 @@ def handle(event, context):
             Body=out.getvalue(),
             ACL="public-read",
             ContentType="image/{}".format(format),
-            # TODO
-            CacheControl="",
+            CacheControl="public, max-age=2592000",
             StorageClass="REDUCED_REDUNDANCY",
         )
 

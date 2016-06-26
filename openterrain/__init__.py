@@ -156,8 +156,7 @@ def save_hillshade(tile, data, meta):
         Body=bytes(bytearray(virtual_file_to_buffer(TMP_PATH))),
         ACL="public-read",
         ContentType="image/tiff",
-        # TODO
-        CacheControl="",
+        CacheControl="public, max-age=2592000",
         StorageClass="REDUCED_REDUNDANCY",
     )
 

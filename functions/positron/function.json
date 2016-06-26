@@ -1,6 +1,6 @@
 
 {
-  "description": "Hillshade generation",
+  "description": "Positron-style color ramps",
   "runtime": "python",
   "memory": 512,
   "timeout": 10,

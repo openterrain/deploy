@@ -1,6 +1,6 @@
 
 {
-  "description": "Hillshade generation",
+  "description": "Dark Matter-style color ramps",
   "runtime": "python",
   "memory": 512,
   "timeout": 5,

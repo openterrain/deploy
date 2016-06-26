@@ -39,7 +39,7 @@ def handle(event, context):
     if format != "png":
         raise Exception("Invalid format")
 
-    if not 0 <= tile.z < MAX_ZOOM:
+    if not 0 <= tile.z <= MAX_ZOOM:
         raise Exception("Invalid zoom")
 
     # TODO retina

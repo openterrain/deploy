@@ -9,6 +9,7 @@ from rasterio._io import virtual_file_to_buffer
 
 
 BUFFER = 2
+MAX_ZOOM = 15
 SRC_TILE_ZOOM = 14
 SRC_TILE_WIDTH = 512
 SRC_TILE_HEIGHT = 512

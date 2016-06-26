@@ -1,9 +1,152 @@
 from collections import namedtuple
+import copy
+import os
 
+import boto3
 import numpy as np
+import rasterio
+from rasterio._io import virtual_file_to_buffer
+
+
+BUFFER = 2
+SRC_TILE_ZOOM = 14
+SRC_TILE_WIDTH = 512
+SRC_TILE_HEIGHT = 512
+
+DST_TILE_WIDTH = 256
+DST_TILE_HEIGHT = 256
+DST_BLOCK_SIZE = 128
+TMP_PATH = "/vsimem/tmp-{}".format(os.getpid())
 
 
 Tile = namedtuple("Tile", "x y z")
+
+
+# TODO sentry
+
+
+def get_hillshade(tile, cache=True):
+    s3 = boto3.resource("s3")
+
+    # TODO make configurable
+    bucket = "hillshades.openterrain.org"
+    key = "3857/{}/{}/{}.tif".format(tile.z, tile.x, tile.y)
+
+    try:
+        s3.Object(
+            bucket,
+            key,
+        ).load()
+
+        with rasterio.open("s3://{}/{}".format(bucket, key)) as src:
+            return src.read(1)
+    except:
+        meta = {}
+        data = render_hillshade(tile, src_meta=meta)
+
+        if cache:
+            save_hillshade(tile, data=data, meta=meta)
+
+        return data
+
+
+def render_hillshade(tile, src_meta={}):
+    # do calculations in SRC_TILE_ZOOM space
+    dz = SRC_TILE_ZOOM - tile.z
+    x = 2**dz * tile.x
+    y = 2**dz * tile.y
+    mx = 2**dz * (tile.x + 1)
+    my = 2**dz * (tile.y + 1)
+    dx = mx - x
+    dy = my - y
+    top = (2**SRC_TILE_ZOOM * SRC_TILE_HEIGHT) - 1
+
+    # y, x (rows, columns)
+    window = [
+              [
+               top - (top - (SRC_TILE_HEIGHT * y)),
+               top - (top - ((SRC_TILE_HEIGHT * y) + int(SRC_TILE_HEIGHT * dy)))
+              ],
+              [
+               SRC_TILE_WIDTH * x,
+               (SRC_TILE_WIDTH * x) + int(SRC_TILE_WIDTH * dx)
+              ]
+             ]
+
+    buffered_window = copy.deepcopy(window)
+
+    # buffer so we have neighboring pixels
+    buffered_window[0][0] -= BUFFER
+    buffered_window[0][1] += BUFFER
+    buffered_window[1][0] -= BUFFER
+    buffered_window[1][1] += BUFFER
+
+    # TODO clip buffered_window on edges so values don't go negative
+
+    with rasterio.open("mapzen.xml") as src:
+        # use decimated reads to read from overviews, per https://github.com/mapbox/rasterio/issues/710
+        data = np.empty(shape=(DST_TILE_WIDTH + 2 * BUFFER, DST_TILE_HEIGHT + 2 * BUFFER)).astype(src.profile["dtype"])
+        data = src.read(1, out=data, window=buffered_window)
+        dx = abs(src.meta["affine"][0])
+        dy = abs(src.meta["affine"][4])
+
+        src_meta.update(src.meta.copy())
+        del src_meta["transform"]
+        src_meta.update(dict(
+            height=DST_TILE_HEIGHT,
+            width=DST_TILE_WIDTH,
+            affine=src.window_transform(window)
+        ))
+
+        # filter out negative values
+        data[data == src.meta["nodata"]] = 9999
+        data[data < 0] = 0
+        data[data == 9999] = src.meta["nodata"]
+
+        hs = hillshade(data,
+            dx=dx,
+            dy=dy,
+        )
+
+        hs = (255.0 * hs).astype(np.uint8)
+
+        return hs[BUFFER:-BUFFER, BUFFER:-BUFFER]
+
+
+def save_hillshade(tile, data, meta):
+    s3 = boto3.resource("s3")
+    meta.update(
+        driver="GTiff",
+        dtype=rasterio.uint8,
+        compress="deflate",
+        predictor=1,
+        nodata=None,
+        tiled=True,
+        sparse_ok=True,
+        blockxsize=DST_BLOCK_SIZE,
+        blockysize=DST_BLOCK_SIZE,
+    )
+
+    with rasterio.open(TMP_PATH, "w", **meta) as tmp:
+        tmp.write(data, 1)
+
+    # TODO make configurable
+    bucket = "hillshades.openterrain.org"
+    key = "3857/{}/{}/{}.tif".format(tile.z, tile.x, tile.y)
+
+    s3.Object(
+        bucket,
+        key,
+    ).put(
+        Body=bytes(bytearray(virtual_file_to_buffer(TMP_PATH))),
+        ACL="public-read",
+        ContentType="image/tiff",
+        # TODO
+        CacheControl="",
+        StorageClass="REDUCED_REDUNDANCY",
+    )
+
+    return "http://{}.s3.amazonaws.com/{}".format(bucket, key)
 
 
 def hillshade(elevation, azdeg=315, altdeg=45, vert_exag=1, dx=1, dy=1, fraction=1.):

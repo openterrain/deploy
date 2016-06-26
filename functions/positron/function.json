@@ -1,0 +1,9 @@
+
+{
+  "description": "Hillshade generation",
+  "runtime": "python",
+  "memory": 512,
+  "timeout": 5,
+  "environment": {
+  }
+}

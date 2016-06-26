@@ -66,6 +66,9 @@ RUN \
 RUN \
   pip install matplotlib
 
+RUN \
+  pip install raven
+
 # Add GDAL libs to the function zip
 
 WORKDIR /usr/local

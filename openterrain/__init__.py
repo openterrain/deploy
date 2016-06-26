@@ -22,9 +22,6 @@ TMP_PATH = "/vsimem/tmp-{}".format(os.getpid())
 Tile = namedtuple("Tile", "x y z")
 
 
-# TODO sentry
-
-
 def get_hillshade(tile, cache=True):
     s3 = boto3.resource("s3")
 

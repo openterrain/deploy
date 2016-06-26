@@ -1,3 +1,4 @@
+import os
 from StringIO import StringIO
 
 import boto3
@@ -21,6 +22,8 @@ POSITRON_RAMP = {
 }
 
 POSITRON = LinearSegmentedColormap("positron", POSITRON_RAMP)
+
+S3_BUCKET = os.environ["S3_BUCKET"]
 
 sentry = Client()
 
@@ -52,12 +55,10 @@ def handle(event, context):
             format=format,
         )
 
-        # TODO make configurable
-        bucket = "hillshades.openterrain.org"
         key = "positron/{}/{}/{}.{}".format(tile.z, tile.x, tile.y, format)
 
         s3.Object(
-            bucket,
+            S3_BUCKET,
             key,
         ).put(
             Body=out.getvalue(),
@@ -69,7 +70,7 @@ def handle(event, context):
         )
 
         return {
-            "location": "http://{}.s3.amazonaws.com/{}".format(bucket, key)
+            "location": "http://{}.s3.amazonaws.com/{}".format(S3_BUCKET, key)
         }
     except:
         sentry.captureException()

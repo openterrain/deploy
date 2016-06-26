@@ -37,6 +37,7 @@ EXAGGERATION = {
     14: 1.1,
 }
 
+S3_BUCKET = os.environ["S3_BUCKET"]
 
 Tile = namedtuple("Tile", "x y z")
 
@@ -44,17 +45,15 @@ Tile = namedtuple("Tile", "x y z")
 def get_hillshade(tile, cache=True):
     s3 = boto3.resource("s3")
 
-    # TODO make configurable
-    bucket = "hillshades.openterrain.org"
     key = "3857/{}/{}/{}.tif".format(tile.z, tile.x, tile.y)
 
     try:
         s3.Object(
-            bucket,
+            S3_BUCKET,
             key,
         ).load()
 
-        with rasterio.open("s3://{}/{}".format(bucket, key)) as src:
+        with rasterio.open("s3://{}/{}".format(S3_BUCKET, key)) as src:
             return src.read(1)
     except:
         meta = {}
@@ -148,12 +147,10 @@ def save_hillshade(tile, data, meta):
     with rasterio.open(TMP_PATH, "w", **meta) as tmp:
         tmp.write(data, 1)
 
-    # TODO make configurable
-    bucket = "hillshades.openterrain.org"
     key = "3857/{}/{}/{}.tif".format(tile.z, tile.x, tile.y)
 
     s3.Object(
-        bucket,
+        S3_BUCKET,
         key,
     ).put(
         Body=bytes(bytearray(virtual_file_to_buffer(TMP_PATH))),
@@ -164,7 +161,7 @@ def save_hillshade(tile, data, meta):
         StorageClass="REDUCED_REDUNDANCY",
     )
 
-    return "http://{}.s3.amazonaws.com/{}".format(bucket, key)
+    return "http://{}.s3.amazonaws.com/{}".format(S3_BUCKET, key)
 
 
 def hillshade(elevation, azdeg=315, altdeg=45, vert_exag=1, dx=1, dy=1, fraction=1.):

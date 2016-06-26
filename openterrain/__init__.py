@@ -78,7 +78,8 @@ def render_hillshade(tile, src_meta={}):
     buffered_window[1][0] -= BUFFER
     buffered_window[1][1] += BUFFER
 
-    # TODO clip buffered_window on edges so values don't go negative
+    # clip buffered_window on edges so values don't go negative
+    buffered_window = np.clip(buffered_window, 0, (2**SRC_TILE_ZOOM * SRC_TILE_HEIGHT) - 1).tolist()
 
     with rasterio.open("mapzen.xml") as src:
         # use decimated reads to read from overviews, per https://github.com/mapbox/rasterio/issues/710

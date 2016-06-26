@@ -18,6 +18,25 @@ DST_TILE_HEIGHT = 256
 DST_BLOCK_SIZE = 128
 TMP_PATH = "/vsimem/tmp-{}".format(os.getpid())
 
+# from http://www.shadedrelief.com/web_relief/
+EXAGGERATION = {
+    0: 45.0,
+    1: 29.0,
+    2: 20.0,
+    3: 14.0,
+    4: 9.5,
+    5: 6.5,
+    6: 5.0,
+    7: 3.6,
+    8: 2.7,
+    9: 2.1,
+    10: 1.7,
+    11: 1.4,
+    12: 1.3,
+    13: 1.2,
+    14: 1.1,
+}
+
 
 Tile = namedtuple("Tile", "x y z")
 
@@ -104,6 +123,7 @@ def render_hillshade(tile, src_meta={}):
         hs = hillshade(data,
             dx=dx,
             dy=dy,
+            vert_exag=EXAGGERATION.get(tile.z, 1.0),
         )
 
         hs = (255.0 * hs).astype(np.uint8)

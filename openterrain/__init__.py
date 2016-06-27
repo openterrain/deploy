@@ -1,8 +1,11 @@
+# coding=utf-8
+
 from collections import namedtuple
 import copy
 import os
 
 import boto3
+import mercantile
 import numpy as np
 import rasterio
 from rasterio._io import virtual_file_to_buffer
@@ -111,7 +114,22 @@ def render_hillshade(tile, src_meta={}):
         # use decimated reads to read from overviews, per https://github.com/mapbox/rasterio/issues/710
         data = np.empty(shape=(DST_TILE_WIDTH + left + right, DST_TILE_HEIGHT + top + bottom)).astype(src.profile["dtype"])
         data = src.read(1, out=data, window=buffered_window)
+
+        # scale data
+
+        # account for overviews
         scale = (buffered_window[1][1] - buffered_window[1][0]) / data.shape[0]
+
+        # interpolate latitudes
+        bounds = mercantile.bounds(tile.x, tile.y, tile.z)
+        height = data.shape[0]
+        latitudes = np.interp(np.arange(height), [top, height - bottom - 1], [bounds.north, bounds.south])
+
+        factors = 1 / np.cos(np.radians(latitudes))
+
+        # convert to 2d array, rotate 270º, scale data
+        data = data * np.rot90(np.atleast_2d(factors), 3)
+
         dx = abs(src.meta["affine"][0]) * scale
         dy = abs(src.meta["affine"][4]) * scale
 

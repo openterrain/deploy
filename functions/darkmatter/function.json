@@ -6,7 +6,7 @@
   "timeout": 10,
   "hooks": {
     "build": "docker run --rm --entrypoint cat $(docker build -q ../..) /tmp/task.zip > task.zip && unzip -o task.zip && rm task.zip",
-    "clean": "rm -rf affine* click* cligj* contextlib2* cycler* enum* lib matplotlib* mpl_toolkits* numpy* pyparsing* pytz* rasterio* raven* share snuggs* pylab*"
+    "clean": "rm -rf affine* click* cligj* contextlib2* cycler* enum* lib matplotlib* mercantile* mpl_toolkits* numpy* pyparsing* pytz* rasterio* raven* share snuggs* pylab*"
   },
   "environment": {
   }

@@ -1,5 +1,6 @@
 boto3
 matplotlib
+mercantile
 numpy
 rasterio
 raven

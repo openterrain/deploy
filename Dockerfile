@@ -69,6 +69,9 @@ RUN \
 RUN \
   pip install raven
 
+RUN \
+  pip install mercantile
+
 # Add GDAL libs to the function zip
 
 WORKDIR /usr/local

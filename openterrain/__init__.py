@@ -84,36 +84,47 @@ def render_hillshade(tile, src_meta={}):
     window = [
               [
                top - (top - (SRC_TILE_HEIGHT * y)),
-               top - (top - ((SRC_TILE_HEIGHT * y) + int(SRC_TILE_HEIGHT * dy)))
+               top - (top - ((SRC_TILE_HEIGHT * y) + int(SRC_TILE_HEIGHT * dy))) - 1
               ],
               [
                SRC_TILE_WIDTH * x,
-               (SRC_TILE_WIDTH * x) + int(SRC_TILE_WIDTH * dx)
+               (SRC_TILE_WIDTH * x) + int(SRC_TILE_WIDTH * dx) - 1
               ]
              ]
 
     buffered_window = copy.deepcopy(window)
 
     # clip buffered_window on edges so values don't go negative
-    right = top = BUFFER
-    left = bottom = 0
+    left_buffer = right_buffer = top_buffer = bottom_buffer = 0
 
     if buffered_window[1][0] > 0:
-        left = BUFFER
+        left_buffer = BUFFER
 
-    if buffered_window[0][1] > 0:
-        bottom = BUFFER
+    if buffered_window[1][1] < top:
+        right_buffer = BUFFER
+
+    if buffered_window[0][0] > 0:
+        top_buffer = BUFFER
+
+    if buffered_window[0][1] < top:
+        bottom_buffer = BUFFER
 
     # buffer so we have neighboring pixels
-    buffered_window[0][0] -= top
-    buffered_window[0][1] += bottom
-    buffered_window[1][0] -= left
-    buffered_window[1][1] += right
+    buffered_window[0][0] -= top_buffer
+    buffered_window[0][1] += bottom_buffer
+    buffered_window[1][0] -= left_buffer
+    buffered_window[1][1] += right_buffer
+
+    print("window:", window)
+    print("max:", top)
+    print("buffered_window:", buffered_window)
 
     with rasterio.open("mapzen.xml") as src:
         # use decimated reads to read from overviews, per https://github.com/mapbox/rasterio/issues/710
-        data = np.empty(shape=(DST_TILE_WIDTH + left + right, DST_TILE_HEIGHT + top + bottom)).astype(src.profile["dtype"])
+        data = np.empty(shape=(DST_TILE_WIDTH + left_buffer + right_buffer, DST_TILE_HEIGHT + top_buffer + bottom_buffer)).astype(src.profile["dtype"])
         data = src.read(1, out=data, window=buffered_window)
+
+        print("data.shape:", data.shape)
 
         # scale data
 
@@ -123,7 +134,7 @@ def render_hillshade(tile, src_meta={}):
         # interpolate latitudes
         bounds = mercantile.bounds(tile.x, tile.y, tile.z)
         height = data.shape[0]
-        latitudes = np.interp(np.arange(height), [top, height - bottom - 1], [bounds.north, bounds.south])
+        latitudes = np.interp(np.arange(height), [top_buffer, height - bottom_buffer - 1], [bounds.north, bounds.south])
 
         factors = 1 / np.cos(np.radians(latitudes))
 
@@ -154,7 +165,10 @@ def render_hillshade(tile, src_meta={}):
 
         hs = (255.0 * hs).astype(np.uint8)
 
-        return hs[left:-right, top:-bottom]
+        print("hs.shape:", hs.shape)
+        print("window: {}:{}, {}:{}".format(left_buffer, hs.shape[0] - right_buffer, top_buffer, hs.shape[1] - bottom_buffer))
+
+        return hs[left_buffer:hs.shape[0] - right_buffer, top_buffer:hs.shape[1] - bottom_buffer]
 
 
 def save_hillshade(tile, data, meta):

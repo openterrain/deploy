@@ -91,21 +91,29 @@ def render_hillshade(tile, src_meta={}):
 
     buffered_window = copy.deepcopy(window)
 
-    # buffer so we have neighboring pixels
-    buffered_window[0][0] -= BUFFER
-    buffered_window[0][1] += BUFFER
-    buffered_window[1][0] -= BUFFER
-    buffered_window[1][1] += BUFFER
-
     # clip buffered_window on edges so values don't go negative
-    buffered_window = np.clip(buffered_window, 0, (2**SRC_TILE_ZOOM * SRC_TILE_HEIGHT) - 1).tolist()
+    right = top = BUFFER
+    left = bottom = 0
+
+    if buffered_window[1][0] > 0:
+        left = BUFFER
+
+    if buffered_window[0][1] > 0:
+        bottom = BUFFER
+
+    # buffer so we have neighboring pixels
+    buffered_window[0][0] -= top
+    buffered_window[0][1] += bottom
+    buffered_window[1][0] -= left
+    buffered_window[1][1] += right
 
     with rasterio.open("mapzen.xml") as src:
         # use decimated reads to read from overviews, per https://github.com/mapbox/rasterio/issues/710
-        data = np.empty(shape=(DST_TILE_WIDTH + 2 * BUFFER, DST_TILE_HEIGHT + 2 * BUFFER)).astype(src.profile["dtype"])
+        data = np.empty(shape=(DST_TILE_WIDTH + left + right, DST_TILE_HEIGHT + top + bottom)).astype(src.profile["dtype"])
         data = src.read(1, out=data, window=buffered_window)
-        dx = abs(src.meta["affine"][0])
-        dy = abs(src.meta["affine"][4])
+        scale = (buffered_window[1][1] - buffered_window[1][0]) / data.shape[0]
+        dx = abs(src.meta["affine"][0]) * scale
+        dy = abs(src.meta["affine"][4]) * scale
 
         src_meta.update(src.meta.copy())
         del src_meta["transform"]
@@ -128,7 +136,7 @@ def render_hillshade(tile, src_meta={}):
 
         hs = (255.0 * hs).astype(np.uint8)
 
-        return hs[BUFFER:-BUFFER, BUFFER:-BUFFER]
+        return hs[left:-right, top:-bottom]
 
 
 def save_hillshade(tile, data, meta):

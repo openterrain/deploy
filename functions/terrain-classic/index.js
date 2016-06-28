@@ -79,6 +79,6 @@ exports.handle = (event, context, callback) => {
           });
         }));
       }));
-    });
-  }));
+    }));
+  });
 };

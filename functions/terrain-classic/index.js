@@ -28,24 +28,26 @@ exports.handle = (event, context, callback) => {
   // TODO validate zoom
   // TODO validate format
 
-  return tilelive.load(SOURCE, holdtime((err, source, elapsedMS) => {
-    if (err) {
-      return callback(err);
-    }
+  // configure retries
+  // retrying occurs in case Mapnik runs into a problem with one of its extant connections
+  const operation = retry.operation({
+    retries: 2,
+    minTimeout: 0,
+  });
 
-    console.log("loading took %dms", elapsedMS);
+  return operation.attempt(currentAttempt => {
+    return tilelive.load(SOURCE, holdtime((err, source, elapsedMS) => {
+      if (err) {
+        return callback(err);
+      }
 
-    // configure retries
-    // retrying occurs in case Mapnik runs into a problem with one of its extant connections
-    const operation = retry.operation({
-      retries: 2,
-      minTimeout: 0,
-    });
+      console.log("loading took %dms", elapsedMS);
 
-    // TODO subscribe to source and write generated tiles out
-    return operation.attempt(currentAttempt => {
+      // TODO subscribe to source and write generated tiles out
       return source.getTile(z, x, y, holdtime((err, data, headers, elapsedMS) => {
         if (operation.retry(err)) {
+          // close the source and allow it to be reloaded
+          source.close();
           return;
         }
 

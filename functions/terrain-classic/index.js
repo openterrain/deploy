@@ -13,7 +13,7 @@ const S3_BUCKET = env.require("S3_BUCKET");
 
 const S3 = new AWS.S3()
 
-const SOURCE = "mapnik://./terrain-classic.xml";
+const SOURCE = "mapnik://./terrain-classic.xml?metatile=1";
 // const SOURCE = "mapnik://./terrain-classic.xml?internal_cache=false";
 
 exports.handle = (event, context, callback) => {

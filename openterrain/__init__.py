@@ -84,11 +84,11 @@ def render_hillshade(tile, src_meta={}):
     window = [
               [
                top - (top - (SRC_TILE_HEIGHT * y)),
-               top - (top - ((SRC_TILE_HEIGHT * y) + int(SRC_TILE_HEIGHT * dy))) - 1
+               top - (top - ((SRC_TILE_HEIGHT * y) + int(SRC_TILE_HEIGHT * dy)))
               ],
               [
                SRC_TILE_WIDTH * x,
-               (SRC_TILE_WIDTH * x) + int(SRC_TILE_WIDTH * dx) - 1
+               (SRC_TILE_WIDTH * x) + int(SRC_TILE_WIDTH * dx)
               ]
              ]
 
@@ -109,12 +109,15 @@ def render_hillshade(tile, src_meta={}):
     if buffered_window[0][1] < top:
         bottom_buffer = BUFFER
 
-    # buffer so we have neighboring pixels
-    buffered_window[0][0] -= top_buffer
-    buffered_window[0][1] += bottom_buffer
-    buffered_window[1][0] -= left_buffer
-    buffered_window[1][1] += right_buffer
+    scale = 2**(dz + SRC_TILE_WIDTH / DST_TILE_WIDTH - 1)
 
+    # buffer so we have neighboring pixels
+    buffered_window[0][0] -= top_buffer * scale
+    buffered_window[0][1] += bottom_buffer * scale
+    buffered_window[1][0] -= left_buffer * scale
+    buffered_window[1][1] += right_buffer * scale
+
+    print("Scale:", scale)
     print("window:", window)
     print("max:", top)
     print("buffered_window:", buffered_window)
@@ -125,11 +128,13 @@ def render_hillshade(tile, src_meta={}):
         data = src.read(1, out=data, window=buffered_window)
 
         print("data.shape:", data.shape)
+        print("Buffered window height:", buffered_window[0][1] - buffered_window[0][0])
+        print("Buffered window width:", buffered_window[0][1] - buffered_window[0][0])
+
+        print("Window height:", window[0][1] - window[0][0])
+        print("Window width:", window[0][1] - window[0][0])
 
         # scale data
-
-        # account for overviews
-        scale = (buffered_window[1][1] - buffered_window[1][0]) / data.shape[0]
 
         # interpolate latitudes
         bounds = mercantile.bounds(tile.x, tile.y, tile.z)

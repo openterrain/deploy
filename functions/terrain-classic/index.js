@@ -46,12 +46,14 @@ exports.handle = (event, context, callback) => {
       // TODO subscribe to source and write generated tiles out
       return source.getTile(z, x, y, holdtime((err, data, headers, elapsedMS) => {
         if (operation.retry(err)) {
+          console.warn(err.stack);
           // close the source and allow it to be reloaded
           source.close();
           return;
         }
 
         if (err) {
+          console.warn("Error after retry:", err.stack);
           return callback(operation.mainError());
         }
 

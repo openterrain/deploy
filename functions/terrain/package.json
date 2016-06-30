@@ -1,0 +1,22 @@
+{
+  "name": "terrain",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.4.2",
+    "mapnik": "^3.5.13",
+    "require-env": "0.0.4",
+    "tilejson": "^1.0.1",
+    "tilelive": "^5.12.2",
+    "tilelive-blend": "^0.2.0",
+    "tilelive-cache": "^0.6.5",
+    "tilelive-http": "^0.10.0",
+    "tilelive-modules": "^0.3.1"
+  }
+}

@@ -8,6 +8,7 @@
     "clean": "rm -rf node_modules"
   },
   "environment": {
+    "KEY_PREFIX": "terrain",
     "S3_BUCKET": "tmp.openterrain.org"
   }
 }

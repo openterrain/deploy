@@ -25,7 +25,7 @@ const SOURCE = {
   }
 };
 
-const makeHandler = require("lib/");
+const makeHandler = require("./lib/");
 
 exports.handle = makeHandler(
   SOURCE,

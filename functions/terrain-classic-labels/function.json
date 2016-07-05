@@ -5,7 +5,7 @@
   "timeout": 30,
   "hooks": {
     "build": "rm -rf node_modules && mkdir node_modules && docker run --rm -v $(pwd):/var/task lambci/lambda:build-nodejs4.3 /bin/bash -c 'npm install --prefix /tmp -g > /dev/null && cd /tmp/lib/node_modules/terrain-classic/ && tar cf - node_modules/' | tar xf - && cp ../../lib/libgdal.so.20 node_modules/mapnik/lib/binding/node-v46-linux-x64/mapnik/input/ && mkdir -p lib && cp ../../lib/libproj.so.9 lib/",
-    "clean": "rm -rf node_modules lib"
+    "clean": "rm -rf node_modules lib/libproj.so.9"
   },
   "environment": {
     "KEY_PREFIX": "terrain-classic-labels",

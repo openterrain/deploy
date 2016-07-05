@@ -12,6 +12,7 @@
     "raven": "^0.11.0",
     "require-env": "0.0.4",
     "retry": "^0.9.0",
+    "sphericalmercator": "^1.0.5",
     "tilejson": "^1.0.1",
     "tilelive": "^5.12.2",
     "tilelive-cache": "^0.6.5",

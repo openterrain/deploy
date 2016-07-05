@@ -50,11 +50,17 @@ module.exports = (uri, bucket, prefix) => {
 
         console.log("loading took %dms", elapsedMS);
 
-        return tilelive.getInfo(source, (err, info) => {
+        return source.getInfo((err, info) => {
           if (err) {
             sentry.captureException(err);
             return callback(err);
           }
+
+          // TODO these defaults belong in tilelive-http / tilelive-blend
+          info.format = info.format || "png";
+          info.minzoom = "minzoom" in info ? info.minzoom : 0;
+          info.maxzoom = "maxzoom" in info ? info.maxzoom : Infinity;
+          info.bounds = info.bounds || [-180, -85.0511, 180, 85.0511];
 
           // validate format / extension
           var ext = getExtension(info.format);

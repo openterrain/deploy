@@ -158,9 +158,9 @@ def render_hillshade(tile, src_meta={}):
         ))
 
         # filter out negative values
-        data[data == src.meta["nodata"]] = 9999
-        data[data < 0] = 0
-        data[data == 9999] = src.meta["nodata"]
+        # data[data == src.meta["nodata"]] = 9999
+        # data[data < 0] = 0
+        # data[data == 9999] = src.meta["nodata"]
 
         hs = hillshade(data,
             dx=dx,

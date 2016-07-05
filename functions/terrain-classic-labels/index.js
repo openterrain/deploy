@@ -14,8 +14,7 @@ const S3_BUCKET = env.require("S3_BUCKET");
 const S3 = new AWS.S3(),
   sentry = new raven.Client();
 
-const SOURCE = "mapnik://./terrain-classic-labels.xml?metatile=1";
-// const SOURCE = "mapnik://./terrain-classic.xml?internal_cache=false";
+const SOURCE = "mapnik://./terrain-classic-labels.xml?metatile=1&bufferSize=192";
 
 exports.handle = (event, context, callback) => {
   context.callbackWaitsForEmptyEventLoop = false;

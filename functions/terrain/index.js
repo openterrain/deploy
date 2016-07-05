@@ -2,13 +2,15 @@
 
 const AWS = require("aws-sdk"),
   env = require("require-env"),
+  raven = require("raven"),
   tilelive = require("tilelive-cache")(require("tilelive"));
 
 require("tilelive-modules/loader")(tilelive);
 
 const S3_BUCKET = env.require("S3_BUCKET");
 
-const S3 = new AWS.S3()
+const S3 = new AWS.S3(),
+  sentry = new raven.Client();
 
 const SOURCE = {
   protocol: "blend:",
@@ -45,11 +47,13 @@ exports.handle = (event, context, callback) => {
 
   return tilelive.load(SOURCE, (err, source) => {
     if (err) {
+      sentry.captureException(err);
       return callback(err);
     }
 
     return source.getTile(z, x, y, (err, data) => {
       if (err) {
+        sentry.captureException(err);
         return callback(err);
       }
 
@@ -65,6 +69,7 @@ exports.handle = (event, context, callback) => {
         StorageClass: "REDUCED_REDUNDANCY",
       }, (err, data) => {
         if (err) {
+          sentry.captureException(err);
           return callback(err);
         }
 

@@ -3,15 +3,16 @@
 const AWS = require("aws-sdk"),
   env = require("require-env"),
   holdtime = require("holdtime"),
+  raven = require("raven"),
   retry = require("retry"),
   tilelive = require("tilelive-cache")(require("tilelive"));
-  // tilelive = require("tilelive");
 
 require("tilelive-modules/loader")(tilelive);
 
 const S3_BUCKET = env.require("S3_BUCKET");
 
-const S3 = new AWS.S3()
+const S3 = new AWS.S3(),
+  sentry = new raven.Client();
 
 const SOURCE = "mapnik://./terrain-classic.xml?metatile=1";
 // const SOURCE = "mapnik://./terrain-classic.xml?internal_cache=false";
@@ -38,6 +39,7 @@ exports.handle = (event, context, callback) => {
   return operation.attempt(currentAttempt => {
     return tilelive.load(SOURCE, holdtime((err, source, elapsedMS) => {
       if (err) {
+        sentry.captureException(err);
         return callback(err);
       }
 
@@ -47,6 +49,7 @@ exports.handle = (event, context, callback) => {
       return source.getTile(z, x, y, holdtime((err, data, headers, elapsedMS) => {
         if (operation.retry(err)) {
           console.warn(err.stack);
+          sentry.captureException(err);
           // close the source and allow it to be reloaded
           source.close();
           return;
@@ -54,6 +57,7 @@ exports.handle = (event, context, callback) => {
 
         if (err) {
           console.warn("Error after retry:", err.stack);
+          sentry.captureException(err);
           return callback(operation.mainError());
         }
 
@@ -71,6 +75,7 @@ exports.handle = (event, context, callback) => {
           StorageClass: "REDUCED_REDUNDANCY",
         }, holdtime((err, data, elapsedMS) => {
           if (err) {
+            sentry.captureException(err);
             return callback(err);
           }
 

@@ -8,6 +8,8 @@
     "clean": "rm -rf node_modules lib"
   },
   "environment": {
-    "S3_BUCKET": "tmp.openterrain.org"
+    "KEY_PREFIX": "terrain-classic",
+    "S3_BUCKET": "tmp.openterrain.org",
+    "SOURCE_URI": "mapnik://./terrain-classic.xml?metatile=1&bufferSize=192"
   }
 }

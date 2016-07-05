@@ -1,5 +1,5 @@
 {
-  "description": "Terrain Classic",
+  "description": "Terrain Classic Labels",
   "runtime": "nodejs4.3",
   "memory": 768,
   "timeout": 30,
@@ -8,6 +8,8 @@
     "clean": "rm -rf node_modules lib"
   },
   "environment": {
-    "S3_BUCKET": "tmp.openterrain.org"
+    "KEY_PREFIX": "terrain-classic-labels",
+    "S3_BUCKET": "tmp.openterrain.org",
+    "SOURCE_URI": "mapnik://./terrain-classic-labels.xml?metatile=1&bufferSize=192"
   }
 }

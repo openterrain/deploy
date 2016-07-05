@@ -1,6 +1,6 @@
 <GDAL_WMS>
   <Service name="TMS">
-    <ServerUrl>https://terrain-preview.mapzen.com/geotiff/${z}/${x}/${y}.tif</ServerUrl>
+    <ServerUrl>https://s3.amazonaws.com/elevation-tiles-prod/geotiff/${z}/${x}/${y}.tif</ServerUrl>
   </Service>
   <DataWindow>
     <UpperLeftX>-20037508.34</UpperLeftX>

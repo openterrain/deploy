@@ -17,9 +17,9 @@ SRC_TILE_ZOOM = 14
 SRC_TILE_WIDTH = 512
 SRC_TILE_HEIGHT = 512
 
-DST_TILE_WIDTH = 256
-DST_TILE_HEIGHT = 256
-DST_BLOCK_SIZE = 128
+DST_TILE_WIDTH = 512
+DST_TILE_HEIGHT = 512
+DST_BLOCK_SIZE = 256
 TMP_PATH = "/vsimem/tmp-{}".format(os.getpid())
 
 # from http://www.shadedrelief.com/web_relief/

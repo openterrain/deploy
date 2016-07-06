@@ -2,5 +2,6 @@ boto3
 matplotlib
 mercantile
 numpy
+pillow
 rasterio
 raven

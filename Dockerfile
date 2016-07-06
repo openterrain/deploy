@@ -72,6 +72,9 @@ RUN \
 RUN \
   pip install mercantile
 
+RUN \
+  pip install pillow
+
 # Add GDAL libs to the function zip
 
 WORKDIR /usr/local

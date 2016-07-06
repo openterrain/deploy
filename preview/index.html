@@ -4,6 +4,8 @@
 <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.css" />
 <script src="http://cdn.leafletjs.com/leaflet/v0.7.7/leaflet.js"></script>
 <script src="http://mlevans.github.io/leaflet-hash/javascripts/leaflet-hash.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet-geocoder-mapzen/1.4.1/leaflet-geocoder-mapzen.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-geocoder-mapzen/1.4.1/leaflet-geocoder-mapzen.js"></script>
 <style type="text/css">
 body, #map {
   height: 100%;
@@ -21,10 +23,33 @@ body, #map {
   var map = L.map('map').setView([47.6190, -122.3529], 15);
 
   var hash = new L.Hash(map);
+  L.control.geocoder("search-979dyct").addTo(map);
 
   // L.tileLayer('http://hillshades.openterrain.org.s3-website-us-east-1.amazonaws.com/darkmatter/{z}/{x}/{y}.png').addTo(map);
-  L.tileLayer('http://hillshades.openterrain.org.s3-website-us-east-1.amazonaws.com/positron/{z}/{x}/{y}.png').addTo(map);
+  // L.tileLayer('http://hillshades.openterrain.org.s3-website-us-east-1.amazonaws.com/positron/{z}/{x}/{y}.png').addTo(map);
   // L.tileLayer('http://tmp.openterrain.org.s3-website-us-east-1.amazonaws.com/positron-terrain/{z}/{x}/{y}.png').addTo(map);
+  // L.tileLayer('http://hillshades.openterrain.org.s3-website-us-east-1.amazonaws.com/terrain-classic-features/{z}/{x}/{y}.png').addTo(map);
+  var provider = "http://tmp.openterrain.org.s3-website-us-east-1.amazonaws.com/terrain/{z}/{x}/{y}.png";
+
+  function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+  }
+
+  var mediaQuery = "(-webkit-min-device-pixel-ratio: 1.5),\
+                    (min--moz-device-pixel-ratio: 1.5),\
+                    (-o-min-device-pixel-ratio: 3/2),\
+                    (min-resolution: 1.5dppx)";
+  if (getParameterByName("retina") !== "false" &&
+      (getParameterByName("retina") ||
+       window.devicePixelRatio > 1 ||
+       (window.matchMedia && window.matchMedia(mediaQuery).matches))) {
+    provider = provider.replace(/\.(?!.*\.)/, "@2x.");
+  }
+
+  L.tileLayer(provider).addTo(map);
 </script>
 </body>
 </html>

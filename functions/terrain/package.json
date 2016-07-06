@@ -7,6 +7,7 @@
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.4.2",
+    "clone": "^1.0.2",
     "holdtime": "^0.1.1",
     "mapnik": "^3.5.13",
     "raven": "^0.11.0",
@@ -15,7 +16,7 @@
     "sphericalmercator": "^1.0.5",
     "tilejson": "^1.0.1",
     "tilelive": "^5.12.2",
-    "tilelive-blend": "^0.2.0",
+    "tilelive-blend": "^0.2.3",
     "tilelive-cache": "^0.6.5",
     "tilelive-http": "^0.10.0",
     "tilelive-mapnik": "^0.6.18",

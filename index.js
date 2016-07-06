@@ -1,6 +1,10 @@
 "use strict";
 
+const url = require("url");
+
 const AWS = require("aws-sdk"),
+  clone = require("clone"),
+  env = require("require-env"),
   holdtime = require("holdtime"),
   raven = require("raven"),
   retry = require("retry"),
@@ -8,6 +12,9 @@ const AWS = require("aws-sdk"),
   tilelive = require("tilelive-cache")(require("tilelive"));
 
 require("tilelive-modules/loader")(tilelive);
+
+const HOSTS = env.require("HOSTS").split(" "),
+  PROTOCOL = process.env.PROTOCOL || "http:";
 
 const S3 = new AWS.S3(),
   mercator = new SphericalMercator(),
@@ -24,15 +31,34 @@ const getExtension = (format) => {
   }
 };
 
-module.exports = (uri, bucket, prefix) => {
+module.exports = (sourceUri, bucket, prefix) => {
+  if (typeof sourceUri === "string") {
+    sourceUri = url.parse(sourceUri, true);
+  }
+
   return (event, context, callback) => {
     context.callbackWaitsForEmptyEventLoop = false;
 
     const z = event.params.path.z || 0,
       x = event.params.path.x || 0,
       parts = event.params.path.y.split("."),
-      y = parts.shift() || 0,
-      format = parts.shift();
+      parts2 = parts.shift().split("@"),
+      y = parts2.shift() || 0,
+      scale = parseInt(parts2.shift() || 1),
+      format = parts.shift(),
+      uri = clone(sourceUri);
+
+    if (scale > 1) {
+      uri.query.scale = scale;
+
+      if (uri.protocol === "mapnik:") {
+        uri.query.tileSize = scale * 256;
+      }
+    }
+
+    if (scale > 2) {
+      return callback(new Error("Invalid scale"));
+    }
 
     // configure retries
     // retrying occurs in case Mapnik runs into a problem with one of its extant connections
@@ -102,7 +128,11 @@ module.exports = (uri, bucket, prefix) => {
 
             console.log("rendering %d/%d/%d took %dms", z, x, y, elapsedMS);
 
-            const key = `${prefix}/${z}/${x}/${y}.png`;
+            let key = `${prefix}/${z}/${x}/${y}.png`;
+
+            if (scale > 1) {
+              key = `${prefix}/${z}/${x}/${y}@${scale}x.png`;
+            }
 
             return S3.putObject({
               Bucket: bucket,
@@ -121,7 +151,7 @@ module.exports = (uri, bucket, prefix) => {
               console.log("writing %s took %dms", key, elapsedMS);
 
               return callback(null, {
-                location: `http://${bucket}.s3.amazonaws.com/${key}`
+                location: `${PROTOCOL}//${HOSTS[(Math.random() * HOSTS.length) | 0]}/${key}`
               });
             }));
           }));

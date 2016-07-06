@@ -7,6 +7,7 @@
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.4.2",
+    "clone": "^1.0.2",
     "holdtime": "^0.1.1",
     "mapnik": "^3.5.13",
     "raven": "^0.11.0",

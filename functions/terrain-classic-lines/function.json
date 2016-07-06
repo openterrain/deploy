@@ -8,6 +8,7 @@
     "clean": "rm -rf node_modules lib/libproj.so.9"
   },
   "environment": {
+    "HOSTS": "a.b.tile.stamen.com b.b.tile.stamen.com c.b.tile.stamen.com d.b.tile.stamen.com",
     "KEY_PREFIX": "terrain-classic-lines",
     "S3_BUCKET": "tmp.openterrain.org",
     "SOURCE_URI": "mapnik://./terrain-classic-lines.xml?metatile=1&bufferSize=0"

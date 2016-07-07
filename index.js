@@ -60,7 +60,7 @@ module.exports = (sourceUri, bucket, prefix) => {
       }
     }
 
-    if (scale > 2) {
+    if (scale < 1 || scale > 2) {
       return callback(new Error("Invalid scale"));
     }
 

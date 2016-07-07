@@ -9,7 +9,9 @@ const AWS = require("aws-sdk"),
   raven = require("raven"),
   retry = require("retry"),
   SphericalMercator = require("sphericalmercator"),
-  tilelive = require("tilelive-cache")(require("tilelive"));
+  tilelive = require("tilelive-cache")(require("tilelive"), {
+    size: 0
+  });
 
 require("tilelive-modules/loader")(tilelive);
 

@@ -16,7 +16,7 @@
     "sphericalmercator": "^1.0.5",
     "tilejson": "^1.0.1",
     "tilelive": "^5.12.2",
-    "tilelive-blend": "^0.2.3",
+    "tilelive-blend": "^0.3.0",
     "tilelive-cache": "^0.6.5",
     "tilelive-http": "^0.10.0",
     "tilelive-mapnik": "^0.6.18",

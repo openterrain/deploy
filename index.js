@@ -126,6 +126,18 @@ module.exports = (sourceUri, bucket, prefix) => {
               return callback(operation.mainError());
             }
 
+            const maxAge = (headers["Cache-Control"] || headers["cache-control"] || "")
+              .split(",")
+              .map(x => x.trim())
+              .filter(x => x.match(/^max-age=/))
+              .map(x => x.split("=")[0])
+              .filter(x => x != null)
+              .shift();
+
+            if (maxAge != null && (maxAge | 0) === 0) {
+              // TODO queue an immediate deletion of this tile since it's effectively invalid
+            }
+
             console.log("rendering %d/%d/%d took %dms", z, x, y, elapsedMS);
 
             let key = `${prefix}/${z}/${x}/${y}.png`;
@@ -139,8 +151,8 @@ module.exports = (sourceUri, bucket, prefix) => {
               Key: key,
               Body: data,
               ACL: "public-read",
-              ContentType: "image/png",
-              CacheControl: "public, max-age=2592000",
+              ContentType: headers["Content-Type"] || headers["content-type"],
+              CacheControl: headers["Cache-Control"] || headers["cache-control"] || "public, max-age=2592000",
               StorageClass: "REDUCED_REDUNDANCY",
             }, holdtime((err, data, elapsedMS) => {
               if (err) {

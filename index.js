@@ -114,7 +114,6 @@ module.exports = (sourceUri, bucket, prefix) => {
             return callback(new Error("Invalid coordinates"));
           }
 
-          // TODO subscribe to source and write generated tiles out
           return source.getTile(z, x, y, holdtime((err, data, headers, elapsedMS) => {
             if (operation.retry(err)) {
               console.warn(err.stack);
@@ -147,6 +146,7 @@ module.exports = (sourceUri, bucket, prefix) => {
             }
 
             if (maxAge != null && (maxAge | 0) === 0) {
+              console.log("Invalidating %s with a maxAge of %s (%s)", key, maxAge, headers["Cache-Control"] || headers["cache-control"]);
               // queue an immediate deletion of this tile since it's effectively invalid
               SQS.sendMessage({
                 MessageBody: JSON.stringify({

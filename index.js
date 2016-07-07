@@ -134,7 +134,7 @@ module.exports = (sourceUri, bucket, prefix) => {
               .split(",")
               .map(x => x.trim())
               .filter(x => x.match(/^max-age=/))
-              .map(x => x.split("=")[0])
+              .map(x => x.split("=")[1])
               .filter(x => x != null)
               .shift();
 

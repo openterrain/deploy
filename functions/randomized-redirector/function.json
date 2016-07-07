@@ -1,0 +1,14 @@
+{
+  "description": "Randomized Redirector",
+  "runtime": "nodejs4.3",
+  "memory": 128,
+  "timeout": 5,
+  "hooks": {
+    "build": "npm install",
+    "clean": "rm -rf node_modules"
+  },
+  "environment": {
+    "HOSTS": "a.dyn.tile.stamen.com b.dyn.tile.stamen.com c.dyn.tile.stamen.com d.dyn.tile.stamen.com",
+    "PROTOCOL": "https:"
+  }
+}

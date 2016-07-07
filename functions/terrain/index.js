@@ -12,7 +12,7 @@ const SOURCE = {
       {
         source: "http://hillshades.openterrain.org.s3-website-us-east-1.amazonaws.com/positron/{z}/{x}/{y}.png",
         "comp-op": "hard-light",
-        opacity: "0.7"
+        opacity: "0.6"
       },
       {
         source: "http://tile.stamen.com.s3-website-us-east-1.amazonaws.com/terrain-features/{z}/{x}/{y}.png",

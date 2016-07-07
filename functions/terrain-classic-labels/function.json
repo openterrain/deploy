@@ -9,8 +9,8 @@
   },
   "environment": {
     "HOSTS": "a.b.tile.stamen.com b.b.tile.stamen.com c.b.tile.stamen.com d.b.tile.stamen.com",
-    "KEY_PREFIX": "terrain-classic-labels",
-    "S3_BUCKET": "tmp.openterrain.org",
+    "KEY_PREFIX": "terrain-labels",
+    "S3_BUCKET": "tile.stamen.com",
     "SOURCE_URI": "mapnik://./terrain-classic-labels.xml?metatile=2&bufferSize=192"
   }
 }

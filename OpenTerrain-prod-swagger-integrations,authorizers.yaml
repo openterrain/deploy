@@ -412,7 +412,7 @@ paths:
             ,\n    \"request-id\" : \"$context.requestId\",\n    \"resource-id\" :\
             \ \"$context.resourceId\",\n    \"resource-path\" : \"$context.resourcePath\"\
             \n    }\n}\n"
-        uri: "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:247182545390:function:openterrain_terrain-classic/invocations"
+        uri: "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:247182545390:function:openterrain_terrain/invocations"
         passthroughBehavior: "when_no_match"
         httpMethod: "POST"
         cacheNamespace: "g6ppqf"
@@ -421,7 +421,7 @@ paths:
         - "method.request.path.y"
         - "method.request.path.z"
         type: "aws"
-  /terrain-classic-background/{z}/{x}/{y}:
+  /terrain-background/{z}/{x}/{y}:
     get:
       consumes:
       - "application/json"
@@ -500,7 +500,7 @@ paths:
         - "method.request.path.y"
         - "method.request.path.z"
         type: "aws"
-  /terrain-classic-lines/{z}/{x}/{y}:
+  /terrain-lines/{z}/{x}/{y}:
     get:
       consumes:
       - "application/json"
@@ -579,7 +579,7 @@ paths:
         - "method.request.path.y"
         - "method.request.path.z"
         type: "aws"
-  /terrain-classic-labels/{z}/{x}/{y}:
+  /terrain-labels/{z}/{x}/{y}:
     get:
       consumes:
       - "application/json"
@@ -658,7 +658,7 @@ paths:
         - "method.request.path.y"
         - "method.request.path.z"
         type: "aws"
-  /terrain-classic-features/{z}/{x}/{y}:
+  /terrain-features/{z}/{x}/{y}:
     get:
       consumes:
       - "application/json"

@@ -29,7 +29,9 @@ body, #map {
   // L.tileLayer('http://hillshades.openterrain.org.s3-website-us-east-1.amazonaws.com/positron/{z}/{x}/{y}.png').addTo(map);
   // L.tileLayer('http://tmp.openterrain.org.s3-website-us-east-1.amazonaws.com/positron-terrain/{z}/{x}/{y}.png').addTo(map);
   // L.tileLayer('http://hillshades.openterrain.org.s3-website-us-east-1.amazonaws.com/terrain-classic-features/{z}/{x}/{y}.png').addTo(map);
-  var provider = "http://tmp.openterrain.org.s3-website-us-east-1.amazonaws.com/terrain/{z}/{x}/{y}.png";
+  // var provider = "http://tmp.openterrain.org.s3-website-us-east-1.amazonaws.com/terrain/{z}/{x}/{y}.png";
+  // var provider = "http://tile.stamen.com/terrain-classic/{z}/{x}/{y}.png";
+  var provider = "http://tile.stamen.com.s3-website-us-east-1.amazonaws.com/terrain/{z}/{x}/{y}.png";
 
   function getParameterByName(name) {
     name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");

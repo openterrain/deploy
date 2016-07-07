@@ -7,7 +7,7 @@ const SOURCE = {
   query: {
     layers: [
       {
-        source: "http://tmp.openterrain.org.s3-website-us-east-1.amazonaws.com/terrain-classic-background/{z}/{x}/{y}.png",
+        source: "http://tile.stamen.com.s3-website-us-east-1.amazonaws.com/terrain-background/{z}/{x}/{y}.png",
       },
       {
         source: "http://hillshades.openterrain.org.s3-website-us-east-1.amazonaws.com/positron/{z}/{x}/{y}.png",
@@ -15,10 +15,10 @@ const SOURCE = {
         opacity: "0.7"
       },
       {
-        source: "http://tmp.openterrain.org.s3-website-us-east-1.amazonaws.com/terrain-classic-features/{z}/{x}/{y}.png",
+        source: "http://tile.stamen.com.s3-website-us-east-1.amazonaws.com/terrain-features/{z}/{x}/{y}.png",
       },
       {
-        source: "http://tmp.openterrain.org.s3-website-us-east-1.amazonaws.com/terrain-classic-labels/{z}/{x}/{y}.png",
+        source: "http://tile.stamen.com.s3-website-us-east-1.amazonaws.com/terrain-labels/{z}/{x}/{y}.png",
       }
     ],
     format: "png8"

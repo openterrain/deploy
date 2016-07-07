@@ -10,6 +10,6 @@
   "environment": {
     "HOSTS": "a.b.tile.stamen.com b.b.tile.stamen.com c.b.tile.stamen.com d.b.tile.stamen.com",
     "KEY_PREFIX": "terrain",
-    "S3_BUCKET": "tmp.openterrain.org"
+    "S3_BUCKET": "tile.stamen.com"
   }
 }

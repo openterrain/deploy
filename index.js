@@ -14,9 +14,11 @@ const AWS = require("aws-sdk"),
 require("tilelive-modules/loader")(tilelive);
 
 const HOSTS = env.require("HOSTS").split(" "),
-  PROTOCOL = process.env.PROTOCOL || "http:";
+  PROTOCOL = process.env.PROTOCOL || "http:",
+  QUEUE_URL = env.require("QUEUE_URL");
 
 const S3 = new AWS.S3(),
+  SQS = new AWS.SQS(),
   mercator = new SphericalMercator(),
   sentry = new raven.Client();
 
@@ -134,16 +136,27 @@ module.exports = (sourceUri, bucket, prefix) => {
               .filter(x => x != null)
               .shift();
 
-            if (maxAge != null && (maxAge | 0) === 0) {
-              // TODO queue an immediate deletion of this tile since it's effectively invalid
-            }
-
             console.log("rendering %d/%d/%d took %dms", z, x, y, elapsedMS);
 
             let key = `${prefix}/${z}/${x}/${y}.png`;
 
             if (scale > 1) {
               key = `${prefix}/${z}/${x}/${y}@${scale}x.png`;
+            }
+
+            if (maxAge != null && (maxAge | 0) === 0) {
+              // queue an immediate deletion of this tile since it's effectively invalid
+              SQS.sendMessage({
+                MessageBody: JSON.stringify({
+                  Bucket: bucket,
+                  Key: key,
+                }),
+                QueueUrl: QUEUE_URL,
+              }, (err) => {
+                if (err) {
+                  console.warn(err.stack);
+                }
+              })
             }
 
             return S3.putObject({

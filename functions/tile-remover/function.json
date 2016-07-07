@@ -1,0 +1,13 @@
+{
+  "description": "Tile Remover",
+  "runtime": "nodejs4.3",
+  "memory": 128,
+  "timeout": 5,
+  "hooks": {
+    "build": "npm install",
+    "clean": "rm -rf node_modules"
+  },
+  "environment": {
+    "QUEUE_URL": "https://sqs.us-east-1.amazonaws.com/247182545390/tile_remover"
+  }
+}

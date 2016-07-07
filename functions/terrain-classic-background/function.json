@@ -10,6 +10,7 @@
   "environment": {
     "HOSTS": "a.b.tile.stamen.com b.b.tile.stamen.com c.b.tile.stamen.com d.b.tile.stamen.com",
     "KEY_PREFIX": "terrain-background",
+    "QUEUE_URL": "https://sqs.us-east-1.amazonaws.com/247182545390/tile_remover",
     "S3_BUCKET": "tile.stamen.com",
     "SOURCE_URI": "mapnik://./terrain-classic-background.xml?metatile=1&bufferSize=8"
   }

@@ -15,10 +15,7 @@ const SOURCE = {
         opacity: "0.6"
       },
       {
-        source: "http://tile.stamen.com.s3-website-us-east-1.amazonaws.com/terrain-features/{z}/{x}/{y}.png",
-      },
-      {
-        source: "http://tile.stamen.com.s3-website-us-east-1.amazonaws.com/terrain-labels/{z}/{x}/{y}.png",
+        source: "http://tile.stamen.com.s3-website-us-east-1.amazonaws.com/terrain-water/{z}/{x}/{y}.png",
       }
     ],
     format: "png8"

@@ -1,0 +1,16 @@
+{
+  "description": "terrain-background",
+  "runtime": "nodejs4.3",
+  "memory": 256,
+  "timeout": 30,
+  "hooks": {
+    "build": "rm -rf node_modules && mkdir node_modules && docker run --rm -v $(pwd):/var/task lambci/lambda:build-nodejs4.3 /bin/bash -c 'npm install --prefix /tmp -g > /dev/null && cd /tmp/lib/node_modules/terrain-classic/ && tar cf - node_modules/' | tar xf -",
+    "clean": "rm -rf node_modules"
+  },
+  "environment": {
+    "HOSTS": "a.b.tile.stamen.com b.b.tile.stamen.com c.b.tile.stamen.com d.b.tile.stamen.com",
+    "KEY_PREFIX": "terrain-background",
+    "QUEUE_URL": "https://sqs.us-east-1.amazonaws.com/247182545390/tile_remover",
+    "S3_BUCKET": "tile.stamen.com"
+  }
+}

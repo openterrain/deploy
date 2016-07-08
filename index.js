@@ -164,14 +164,6 @@ module.exports = (sourceUri, bucket, prefix, headers) => {
               return callback(operation.mainError());
             }
 
-            const maxAge = (headers["Cache-Control"] || headers["cache-control"] || "")
-              .split(",")
-              .map(x => x.trim())
-              .filter(x => x.match(/^max-age=/))
-              .map(x => x.split("=")[1])
-              .filter(x => x != null)
-              .shift();
-
             console.log("rendering %d/%d/%d took %dms", z, x, y, elapsedMS);
 
             let key = `${prefix}/${z}/${x}/${y}.png`;
@@ -179,6 +171,14 @@ module.exports = (sourceUri, bucket, prefix, headers) => {
             if (scale > 1) {
               key = `${prefix}/${z}/${x}/${y}@${scale}x.png`;
             }
+
+            const maxAge = (headers["Cache-Control"] || headers["cache-control"] || "")
+              .split(",")
+              .map(x => x.trim())
+              .filter(x => x.match(/^max-age=/))
+              .map(x => x.split("=")[1])
+              .filter(x => x != null)
+              .shift();
 
             if (maxAge != null && (maxAge | 0) === 0) {
               console.log("Invalidating %s with a maxAge of %s (%s)", key, maxAge, headers["Cache-Control"] || headers["cache-control"]);

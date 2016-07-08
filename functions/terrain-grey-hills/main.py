@@ -73,7 +73,7 @@ def handle(event, context):
             format=format,
         )
 
-        key = "terrain-grey-hills/{}/{}/{}@{}x.{}".format(tile.z, tile.x, tile.y, scale, format)
+        key = "terrain-grey-hills/{}/{}/{}@2x.{}".format(tile.z, tile.x, tile.y, format)
 
         if scale == 1:
             # save retina version first

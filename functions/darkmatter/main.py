@@ -69,7 +69,7 @@ def handle(event, context):
             format=format,
         )
 
-        key = "darkmatter/{}/{}/{}@{}x.{}".format(tile.z, tile.x, tile.y, scale, format)
+        key = "darkmatter/{}/{}/{}@2x.{}".format(tile.z, tile.x, tile.y, format)
 
         if scale == 1:
             # save retina version first

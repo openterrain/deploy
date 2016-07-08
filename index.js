@@ -90,17 +90,35 @@ module.exports = (sourceUri, bucket, prefix, headers) => {
 
     return operation.attempt(currentAttempt => {
       return tilelive.load(uri, holdtime((err, source, elapsedMS) => {
+        if (operation.retry(err)) {
+          sentry.captureException(err);
+          console.warn("tileload.load:", err.stack);
+          // close the source and allow it to be reloaded
+          source.close(() => {});
+          return;
+        }
+
         if (err) {
           sentry.captureException(err);
-          return callback(err);
+          console.warn("Error after retry:", err.stack);
+          return callback(operation.mainError());
         }
 
         console.log("loading took %dms", elapsedMS);
 
         return source.getInfo((err, info) => {
+          if (operation.retry(err)) {
+            sentry.captureException(err);
+            console.warn("source.getInfo:", err.stack);
+            // close the source and allow it to be reloaded
+            source.close(() => {});
+            return;
+          }
+
           if (err) {
             sentry.captureException(err);
-            return callback(err);
+            console.warn("Error after retry:", err.stack);
+            return callback(operation.mainError());
           }
 
           // TODO these defaults belong in tilelive-http / tilelive-blend
@@ -133,7 +151,7 @@ module.exports = (sourceUri, bucket, prefix, headers) => {
 
           return source.getTile(z, x, y, holdtime((err, data, headers, elapsedMS) => {
             if (operation.retry(err)) {
-              console.warn(err.stack);
+              console.warn("source.getTile:", err.stack);
               sentry.captureException(err);
               // close the source and allow it to be reloaded
               source.close(() => {});
@@ -141,8 +159,8 @@ module.exports = (sourceUri, bucket, prefix, headers) => {
             }
 
             if (err) {
-              console.warn("Error after retry:", err.stack);
               sentry.captureException(err);
+              console.warn("Error after retry:", err.stack);
               return callback(operation.mainError());
             }
 

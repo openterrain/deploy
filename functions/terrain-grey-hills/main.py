@@ -28,7 +28,8 @@ GREY_HILLS_RAMP = {
 
 GREY_HILLS = LinearSegmentedColormap("grey_hills", GREY_HILLS_RAMP)
 
-S3_BUCKET = os.environ["S3_BUCKET"]
+# S3_BUCKET is used for hillshade saving, so if they differ, it's problematic
+S3_BUCKET = "tile.stamen.com"
 
 sentry = Client()
 

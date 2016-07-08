@@ -9,6 +9,5 @@
     "clean": "rm -rf affine* click* cligj* contextlib2* cycler* enum* lib matplotlib* mercantile* mpl_toolkits* numpy* pyparsing* pytz* rasterio* raven* share snuggs* PIL* Pillow* pylab*"
   },
   "environment": {
-    "S3_BUCKET": "tile.stamen.com"
   }
 }

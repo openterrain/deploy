@@ -7,5 +7,8 @@ const makeHandler = require("./lib/");
 exports.handle = makeHandler(
   env.require("SOURCE_URI"),
   env.require("S3_BUCKET"),
-  env.require("KEY_PREFIX")
+  env.require("KEY_PREFIX"),
+  {
+    "Surrogate-Key": "{{prefix}} {{prefix}}/z{{zoom}}"
+  }
 );

@@ -5,13 +5,12 @@ const url = require("url");
 const AWS = require("aws-sdk"),
   clone = require("clone"),
   env = require("require-env"),
+  handlebars = require("handlebars"),
   holdtime = require("holdtime"),
   raven = require("raven"),
   retry = require("retry"),
   SphericalMercator = require("sphericalmercator"),
-  tilelive = require("tilelive-cache")(require("tilelive"), {
-    size: 0
-  });
+  tilelive = require("tilelive-cache")(require("tilelive"));
 
 require("tilelive-modules/loader")(tilelive);
 
@@ -35,10 +34,28 @@ const getExtension = (format) => {
   }
 };
 
-module.exports = (sourceUri, bucket, prefix) => {
+module.exports = (sourceUri, bucket, prefix, headers) => {
   if (typeof sourceUri === "string") {
     sourceUri = url.parse(sourceUri, true);
   }
+
+  const templates = Object.keys(headers || {}).reduce((obj, name) => {
+    obj[name] = handlebars.compile(headers[name]);
+
+    // attempt to parse so we can fail fast
+    try {
+      obj[name]();
+    } catch (err) {
+      console.error("'${name}' header is invalid.")
+      console.error(err);
+
+      sentry.captureException(err);
+
+      process.exit(1);
+    }
+
+    return obj;
+  }, {});
 
   return (event, context, callback) => {
     context.callbackWaitsForEmptyEventLoop = false;
@@ -161,6 +178,22 @@ module.exports = (sourceUri, bucket, prefix) => {
               })
             }
 
+            // populate custom headers
+            const params = {
+              prefix,
+              scale,
+              x,
+              y,
+              z,
+              zoom: z,
+            };
+
+            const metadata = Object.keys(templates).reduce((obj, name) => {
+              obj[name] = templates[name](params);
+
+              return obj;
+            }, {});
+
             return S3.putObject({
               Bucket: bucket,
               Key: key,
@@ -168,6 +201,7 @@ module.exports = (sourceUri, bucket, prefix) => {
               ACL: "public-read",
               ContentType: headers["Content-Type"] || headers["content-type"],
               CacheControl: headers["Cache-Control"] || headers["cache-control"] || "public, max-age=2592000",
+              Metadata: metadata,
               StorageClass: "REDUCED_REDUNDANCY",
             }, holdtime((err, data, elapsedMS) => {
               if (err) {

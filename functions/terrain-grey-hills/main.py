@@ -86,6 +86,7 @@ def handle(event, context):
                 ContentType="image/{}".format(format),
                 CacheControl="public, max-age=2592000",
                 StorageClass="REDUCED_REDUNDANCY",
+                Metadata={"Surrogate-Key": "terrain-grey-hills terrain-grey-hills/z{}".format(zoom)},
             )
 
             # resize as 1x asset
@@ -104,6 +105,7 @@ def handle(event, context):
             ContentType="image/{}".format(format),
             CacheControl="public, max-age=2592000",
             StorageClass="REDUCED_REDUNDANCY",
+            Metadata={"Surrogate-Key": "terrain-grey-hills terrain-grey-hills/z{}".format(zoom)},
         )
     except:
         sentry.captureException()

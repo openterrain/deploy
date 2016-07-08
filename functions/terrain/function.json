@@ -1,5 +1,5 @@
 {
-  "description": "Positron + Terrain",
+  "description": "Terrain Classic",
   "runtime": "nodejs4.3",
   "memory": 256,
   "timeout": 30,

@@ -119,7 +119,7 @@ module.exports = (sourceUri, bucket, prefix) => {
               console.warn(err.stack);
               sentry.captureException(err);
               // close the source and allow it to be reloaded
-              source.close();
+              source.close(() => {});
               return;
             }
 

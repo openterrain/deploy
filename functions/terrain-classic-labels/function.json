@@ -12,6 +12,6 @@
     "KEY_PREFIX": "terrain-labels",
     "QUEUE_URL": "https://sqs.us-east-1.amazonaws.com/247182545390/tile_remover",
     "S3_BUCKET": "tile.stamen.com",
-    "SOURCE_URI": "mapnik://./terrain-classic-labels.xml?metatile=2&bufferSize=192"
+    "SOURCE_URI": "mapnik://./terrain-classic-labels.xml?metatile=2&bufferSize=256"
   }
 }

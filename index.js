@@ -93,8 +93,10 @@ module.exports = (sourceUri, bucket, prefix, headers) => {
         if (operation.retry(err)) {
           sentry.captureException(err);
           console.warn("tileload.load:", err.stack);
-          // close the source and allow it to be reloaded
-          source.close(() => {});
+          if (source) {
+            // close the source and allow it to be reloaded
+            source.close(() => {});
+          }
           return;
         }
 

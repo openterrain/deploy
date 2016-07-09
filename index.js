@@ -60,11 +60,11 @@ module.exports = (sourceUri, bucket, prefix, headers) => {
   return (event, context, callback) => {
     context.callbackWaitsForEmptyEventLoop = false;
 
-    const z = event.params.path.z || 0,
-      x = event.params.path.x || 0,
+    const z = event.params.path.z | 0,
+      x = event.params.path.x | 0,
       parts = event.params.path.y.split("."),
       parts2 = parts.shift().split("@"),
-      y = parts2.shift() || 0,
+      y = parts2.shift() | 0,
       scale = parseInt(parts2.shift() || 1),
       format = parts.shift(),
       uri = clone(sourceUri);

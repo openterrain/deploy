@@ -2,7 +2,7 @@
   "description": "Tile Remover",
   "runtime": "nodejs4.3",
   "memory": 128,
-  "timeout": 5,
+  "timeout": 60,
   "hooks": {
     "build": "npm install",
     "clean": "rm -rf node_modules"

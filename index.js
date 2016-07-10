@@ -197,7 +197,7 @@ module.exports = (sourceUri, bucket, prefix, headers) => {
                 if (err) {
                   console.warn(err.stack);
                 }
-              })
+              });
             }
 
             // populate custom headers

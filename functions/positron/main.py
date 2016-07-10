@@ -54,6 +54,13 @@ def handle(event, context):
     if not 0 < scale <= 2:
         raise Exception("Invalid scale")
 
+    if not 0 <= tile.x < 2**tile.z:
+        raise Exception("Invalid coordinates")
+
+    if not 0 <= tile.y < 2**tile.z:
+        raise Exception("Invalid coordinates")
+
+
     # TODO maybe check if the tile already exists (but maybe we actually want to overwrite it)
 
     try:

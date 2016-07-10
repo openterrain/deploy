@@ -174,6 +174,8 @@ module.exports = (sourceUri, bucket, prefix, headers) => {
               key = `${prefix}/${z}/${x}/${y}@${scale}x.png`;
             }
 
+            headers = headers || {};
+
             const maxAge = (headers["Cache-Control"] || headers["cache-control"] || "")
               .split(",")
               .map(x => x.trim())

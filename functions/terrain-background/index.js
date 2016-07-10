@@ -12,7 +12,7 @@ const SOURCE = {
       {
         source: {
           protocol: "http:",
-          host: "hillshades.openterrain.org.s3-website.us-east-1.amazonaws.com",
+          host: "hillshades.openterrain.org.s3-website-us-east-1.amazonaws.com",
           pathname: "/positron/{z}/{x}/{y}.png",
           info: {
             minzoom: 0,

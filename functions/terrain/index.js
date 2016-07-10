@@ -21,6 +21,10 @@ const SOURCE = {
         source: "http://tile.stamen.com.s3-website-us-east-1.amazonaws.com/terrain-labels/{z}/{x}/{y}.png",
       }
     ],
+    info: {
+      minzoom: 0,
+      maxzoom: 18,
+    },
     format: "png8"
   }
 };

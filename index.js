@@ -166,13 +166,13 @@ module.exports = (sourceUri, bucket, prefix, headers) => {
               return callback(operation.mainError());
             }
 
-            console.log("rendering %d/%d/%d took %dms", z, x, y, elapsedMS);
-
             let key = `${prefix}/${z}/${x}/${y}.png`;
 
             if (scale > 1) {
               key = `${prefix}/${z}/${x}/${y}@${scale}x.png`;
             }
+
+            console.log("Rendering %s took %dms", key, elapsedMS);
 
             headers = headers || {};
 

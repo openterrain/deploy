@@ -58,9 +58,21 @@ module.exports = (sourceUri, bucket, prefix, headers) => {
     return obj;
   }, {});
 
-  return (event, context, callback) => {
+  return (event, context, _callback) => {
     const startTimes = os.cpus().map(x => x.times);
     context.callbackWaitsForEmptyEventLoop = false;
+    const timeout = setTimeout(() => {
+      console.error("About to be timed out by Lambda, quitting for cleanup purposes...");
+
+      process.exit(1);
+    }, context.getRemainingTimeInMillis() - 500);
+
+    // wrap the callback so that the timeout is canceled
+    const callback = function() {
+      clearTimeout(timeout);
+
+      return _callback.apply(null, arguments);
+    };
 
     const z = event.params.path.z | 0,
       x = event.params.path.x | 0,

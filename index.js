@@ -64,7 +64,7 @@ module.exports = (sourceUri, bucket, prefix, headers) => {
     const timeout = setTimeout(() => {
       console.error("About to be timed out by Lambda, quitting for cleanup purposes...");
 
-      process.exit(1);
+      process.exit(124);
     }, context.getRemainingTimeInMillis() - 500);
 
     // wrap the callback so that the timeout is canceled

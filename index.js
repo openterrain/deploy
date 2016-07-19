@@ -1,6 +1,7 @@
 "use strict";
 
-const url = require("url");
+const os = require("os"),
+  url = require("url");
 
 const AWS = require("aws-sdk"),
   clone = require("clone"),
@@ -58,6 +59,7 @@ module.exports = (sourceUri, bucket, prefix, headers) => {
   }, {});
 
   return (event, context, callback) => {
+    const startTimes = os.cpus().map(x => x.times);
     context.callbackWaitsForEmptyEventLoop = false;
 
     const z = event.params.path.z | 0,
@@ -232,6 +234,18 @@ module.exports = (sourceUri, bucket, prefix, headers) => {
               }
 
               console.log("writing %s took %dms", key, elapsedMS);
+
+              const endTimes = os.cpus().map(x => x.times);
+              const times = ["user", "nice", "sys", "idle"].reduce((obj, cat) => {
+                obj[cat] = endTimes.reduce((sum, time) => sum + time[cat], 0) - startTimes.reduce((sum, time) => sum + time[cat], 0);
+
+                return obj;
+              }, {});
+
+              console.log("%s user: %d:", key, times.user);
+              console.log("%s nice: %d:", key, times.nice);
+              console.log("%s sys: %d:", key, times.sys);
+              console.log("%s idle: %d:", key, times.idle);
 
               return callback(null, {
                 location: `${PROTOCOL}//${HOSTS[(Math.random() * HOSTS.length) | 0]}/${key}`

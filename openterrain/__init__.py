@@ -116,22 +116,10 @@ def render_hillshade(tile, src_meta={}):
     buffered_window[1][0] -= left_buffer * scale
     buffered_window[1][1] += right_buffer * scale
 
-    print("Scale:", scale)
-    print("window:", window)
-    print("max:", top)
-    print("buffered_window:", buffered_window)
-
     with rasterio.open("mapzen.xml") as src:
         # use decimated reads to read from overviews, per https://github.com/mapbox/rasterio/issues/710
         data = np.empty(shape=(DST_TILE_WIDTH + left_buffer + right_buffer, DST_TILE_HEIGHT + top_buffer + bottom_buffer)).astype(src.profile["dtype"])
         data = src.read(1, out=data, window=buffered_window)
-
-        print("data.shape:", data.shape)
-        print("Buffered window height:", buffered_window[0][1] - buffered_window[0][0])
-        print("Buffered window width:", buffered_window[0][1] - buffered_window[0][0])
-
-        print("Window height:", window[0][1] - window[0][0])
-        print("Window width:", window[0][1] - window[0][0])
 
         # scale data
 
@@ -156,11 +144,6 @@ def render_hillshade(tile, src_meta={}):
             affine=src.window_transform(window)
         ))
 
-        # filter out negative values
-        # data[data == src.meta["nodata"]] = 9999
-        # data[data < 0] = 0
-        # data[data == 9999] = src.meta["nodata"]
-
         hs = hillshade(data,
             dx=dx,
             dy=dy,
@@ -168,9 +151,6 @@ def render_hillshade(tile, src_meta={}):
         )
 
         hs = (255.0 * hs).astype(np.uint8)
-
-        print("hs.shape:", hs.shape)
-        print("window: {}:{}, {}:{}".format(left_buffer, hs.shape[0] - right_buffer, top_buffer, hs.shape[1] - bottom_buffer))
 
         return hs[left_buffer:hs.shape[0] - right_buffer, top_buffer:hs.shape[1] - bottom_buffer]
 

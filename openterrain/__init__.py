@@ -8,6 +8,9 @@ import boto3
 import mercantile
 import numpy as np
 import rasterio
+from rasterio import Affine
+from rasterio.enums import Resampling
+from rasterio.warp import reproject
 from rasterio._io import virtual_file_to_buffer
 
 
@@ -41,6 +44,18 @@ EXAGGERATION = {
     14: 1.1,
 }
 
+RESAMPLING = {
+    5: 0.9,
+    6: 0.8,
+    7: 0.8,
+    8: 0.7,
+    9: 0.7,
+    10: 0.7,
+    11: 0.8,
+    12: 0.8,
+    13: 0.9,
+}
+
 S3_BUCKET = os.environ["S3_BUCKET"]
 
 Tile = namedtuple("Tile", "x y z")
@@ -69,7 +84,7 @@ def get_hillshade(tile, cache=True):
         return data
 
 
-def render_hillshade(tile, src_meta={}):
+def render_hillshade(tile, src_meta={}, resample_factor=1.0):
     # do calculations in SRC_TILE_ZOOM space
     dz = SRC_TILE_ZOOM - tile.z
     x = 2**dz * tile.x
@@ -117,22 +132,10 @@ def render_hillshade(tile, src_meta={}):
     buffered_window[1][0] -= left_buffer * scale
     buffered_window[1][1] += right_buffer * scale
 
-    print("Scale:", scale)
-    print("window:", window)
-    print("max:", top)
-    print("buffered_window:", buffered_window)
-
     with rasterio.open("mapzen.xml") as src:
         # use decimated reads to read from overviews, per https://github.com/mapbox/rasterio/issues/710
         data = np.empty(shape=(DST_TILE_WIDTH + left_buffer + right_buffer, DST_TILE_HEIGHT + top_buffer + bottom_buffer)).astype(src.profile["dtype"])
         data = src.read(1, out=data, window=buffered_window)
-
-        print("data.shape:", data.shape)
-        print("Buffered window height:", buffered_window[0][1] - buffered_window[0][0])
-        print("Buffered window width:", buffered_window[0][1] - buffered_window[0][0])
-
-        print("Window height:", window[0][1] - window[0][0])
-        print("Window width:", window[0][1] - window[0][0])
 
         # scale data
 
@@ -146,8 +149,29 @@ def render_hillshade(tile, src_meta={}):
         # convert to 2d array, rotate 270º, scale data
         data = data * np.rot90(np.atleast_2d(factors), 3)
 
-        dx = abs(src.meta["affine"][0]) * scale
-        dy = abs(src.meta["affine"][4]) * scale
+        # TODO skip if resample_factor == 1.0
+
+        aff = src.affine
+        newaff = Affine(aff.a / resample_factor, aff.b, aff.c,
+                        aff.d, aff.e / resample_factor, aff.f)
+        resampled = np.empty(shape=(round(data.shape[0] * resample_factor),
+                                 round(data.shape[1] * resample_factor)),
+                             dtype=data.dtype)
+
+        # downsample
+        reproject(
+            data,
+            resampled,
+            src_transform=src.affine,
+            dst_transform=newaff,
+            src_crs=src.crs,
+            dst_crs=src.crs,
+            # resampling=Resampling.bilinear,
+            resampling=1,
+        )
+
+        dx = abs(src.affine.a / resample_factor) * scale
+        dy = abs(src.affine.e / resample_factor) * scale
 
         src_meta.update(src.meta.copy())
         del src_meta["transform"]
@@ -157,12 +181,7 @@ def render_hillshade(tile, src_meta={}):
             affine=src.window_transform(window)
         ))
 
-        # filter out negative values
-        # data[data == src.meta["nodata"]] = 9999
-        # data[data < 0] = 0
-        # data[data == 9999] = src.meta["nodata"]
-
-        hs = hillshade(data,
+        hs = hillshade(resampled,
             dx=dx,
             dy=dy,
             vert_exag=EXAGGERATION.get(tile.z, 1.0),
@@ -170,8 +189,21 @@ def render_hillshade(tile, src_meta={}):
 
         hs = (255.0 * hs).astype(np.uint8)
 
-        print("hs.shape:", hs.shape)
-        print("window: {}:{}, {}:{}".format(left_buffer, hs.shape[0] - right_buffer, top_buffer, hs.shape[1] - bottom_buffer))
+        resampled_hs = np.empty(shape=data.shape, dtype=hs.dtype)
+
+        # upsample (invert the previous reprojection)
+        reproject(
+            hs,
+            resampled_hs,
+            src_transform=newaff,
+            dst_transform=src.affine,
+            src_crs=src.crs,
+            dst_crs=src.crs,
+            # resampling=Resampling.bilinear,
+            resampling=1,
+        )
+
+        hs = resampled_hs
 
         return hs[left_buffer:hs.shape[0] - right_buffer, top_buffer:hs.shape[1] - bottom_buffer]
 

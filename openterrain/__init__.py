@@ -133,8 +133,8 @@ def render_hillshade(tile, src_meta={}):
         # convert to 2d array, rotate 270º, scale data
         data = data * np.rot90(np.atleast_2d(factors), 3)
 
-        dx = abs(src.meta["affine"][0]) * scale
-        dy = abs(src.meta["affine"][4]) * scale
+        dx = abs(src.affine.a) * scale
+        dy = abs(src.affine.e) * scale
 
         src_meta.update(src.meta.copy())
         del src_meta["transform"]

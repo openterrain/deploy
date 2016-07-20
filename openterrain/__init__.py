@@ -41,12 +41,11 @@ EXAGGERATION = {
     14: 1.1,
 }
 
-S3_BUCKET = os.environ["S3_BUCKET"]
-
 Tile = namedtuple("Tile", "x y z")
 
 
 def get_hillshade(tile, cache=True):
+    S3_BUCKET = os.environ["S3_BUCKET"]
     s3 = boto3.resource("s3")
 
     key = "3857/{}/{}/{}.tif".format(tile.z, tile.x, tile.y)
@@ -177,6 +176,7 @@ def render_hillshade(tile, src_meta={}):
 
 
 def save_hillshade(tile, data, meta):
+    S3_BUCKET = os.environ["S3_BUCKET"]
     s3 = boto3.resource("s3")
     meta.update(
         driver="GTiff",

@@ -4,6 +4,7 @@ from collections import namedtuple
 import copy
 import os
 
+from affine import Affine
 import boto3
 import mercantile
 import numpy as np
@@ -141,7 +142,7 @@ def render_hillshade(tile, src_meta={}):
         src_meta.update(dict(
             height=DST_TILE_HEIGHT,
             width=DST_TILE_WIDTH,
-            affine=src.window_transform(window)
+            affine=src.window_transform(window) * Affine.scale(scale)
         ))
 
         hs = hillshade(data,

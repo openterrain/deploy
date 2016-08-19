@@ -84,7 +84,7 @@ def get_hillshade(tile, cache=True):
         return data
 
 
-def render_hillshade(tile, src_meta={}, resample_factor=1.0):
+def render_hillshade(tile, src_meta={}, resample=True):
     # do calculations in SRC_TILE_ZOOM space
     dz = SRC_TILE_ZOOM - tile.z
     x = 2**dz * tile.x
@@ -96,6 +96,7 @@ def render_hillshade(tile, src_meta={}, resample_factor=1.0):
     top = (2**SRC_TILE_ZOOM * SRC_TILE_HEIGHT) - 1
 
     # y, x (rows, columns)
+    # window is measured in pixels at SRC_TILE_ZOOM
     window = [
               [
                top - (top - (SRC_TILE_HEIGHT * y)),
@@ -124,9 +125,11 @@ def render_hillshade(tile, src_meta={}, resample_factor=1.0):
     if buffered_window[0][1] < top:
         bottom_buffer = BUFFER
 
+    # conversion factor from SRC_TILE_ZOOM to the target image
     scale = 2**(dz + SRC_TILE_WIDTH / DST_TILE_WIDTH - 1)
 
     # buffer so we have neighboring pixels
+    # scale so that BUFFER pixels @ SRC_TILE_ZOOM are converted to BUFFER pixels @ target zoom
     buffered_window[0][0] -= top_buffer * scale
     buffered_window[0][1] += bottom_buffer * scale
     buffered_window[1][0] -= left_buffer * scale
@@ -149,29 +152,76 @@ def render_hillshade(tile, src_meta={}, resample_factor=1.0):
         # convert to 2d array, rotate 270º, scale data
         data = data * np.rot90(np.atleast_2d(factors), 3)
 
-        # TODO skip if resample_factor == 1.0
+        resample_factor = RESAMPLING.get(tile.z, 1.0)
 
-        aff = src.affine
-        newaff = Affine(aff.a / resample_factor, aff.b, aff.c,
-                        aff.d, aff.e / resample_factor, aff.f)
-        resampled = np.empty(shape=(round(data.shape[0] * resample_factor),
-                                 round(data.shape[1] * resample_factor)),
-                             dtype=data.dtype)
+        if resample and resample_factor != 1.0:
+            # resample data according to Tom Paterson's chart
 
-        # downsample
-        reproject(
-            data,
-            resampled,
-            src_transform=src.affine,
-            dst_transform=newaff,
-            src_crs=src.crs,
-            dst_crs=src.crs,
-            # resampling=Resampling.bilinear,
-            resampling=1,
-        )
+            aff = src.affine
+            # this is the equivalent of a scale transform (I think)
+            newaff = Affine(aff.a / resample_factor, aff.b, aff.c,
+                            aff.d, aff.e / resample_factor, aff.f)
+            # create an empty target array that's the shape of the resampled tile (e.g. 80% of 260x260px)
+            resampled = np.empty(shape=(round(data.shape[0] * resample_factor),
+                                     round(data.shape[1] * resample_factor)),
+                                 dtype=data.dtype)
 
-        dx = abs(src.affine.a / resample_factor) * scale
-        dy = abs(src.affine.e / resample_factor) * scale
+            # downsample using GDAL's reprojection functionality (which gives us access to different resampling algorithms)
+            reproject(
+                data,
+                resampled,
+                src_transform=src.affine,
+                dst_transform=newaff,
+                src_crs=src.crs,
+                dst_crs=src.crs,
+                # resampling=Resampling.bilinear,
+                resampling=1,
+            )
+
+            dx = abs(newaff.a) * scale
+            dy = abs(newaff.e) * scale
+
+            hs = hillshade(resampled,
+                dx=dx,
+                dy=dy,
+                vert_exag=EXAGGERATION.get(tile.z, 1.0),
+                # azdeg=315, # which direction is the light source coming from (north-south)
+                # altdeg=45, # what angle is the light source coming from (overhead-horizon)
+            )
+
+            # scale hillshade values (0.0-1.0) to integers (0-255)
+            hs = (255.0 * hs).astype(np.uint8)
+
+            # create an empty target array that's the shape of the target tile + buffers (e.g. 260x260px)
+            resampled_hs = np.empty(shape=data.shape, dtype=hs.dtype)
+
+            # upsample (invert the previous reprojection)
+            reproject(
+                hs,
+                resampled_hs,
+                src_transform=newaff,
+                dst_transform=src.affine,
+                src_crs=src.crs,
+                dst_crs=src.crs,
+                # resampling=Resampling.bilinear,
+                resampling=1,
+            )
+
+            hs = resampled_hs
+        else:
+            dx = abs(src.affine.a) * scale
+            dy = abs(src.affine.e) * scale
+
+            hs = hillshade(data,
+                dx=dx,
+                dy=dy,
+                vert_exag=EXAGGERATION.get(tile.z, 1.0),
+                # azdeg=315, # which direction is the light source coming from (north-south)
+                # altdeg=45, # what angle is the light source coming from (overhead-horizon)
+            )
+
+            # scale hillshade values (0.0-1.0) to integers (0-255)
+            hs = (255.0 * hs).astype(np.uint8)
 
         src_meta.update(src.meta.copy())
         del src_meta["transform"]
@@ -181,30 +231,7 @@ def render_hillshade(tile, src_meta={}, resample_factor=1.0):
             affine=src.window_transform(window)
         ))
 
-        hs = hillshade(resampled,
-            dx=dx,
-            dy=dy,
-            vert_exag=EXAGGERATION.get(tile.z, 1.0),
-        )
-
-        hs = (255.0 * hs).astype(np.uint8)
-
-        resampled_hs = np.empty(shape=data.shape, dtype=hs.dtype)
-
-        # upsample (invert the previous reprojection)
-        reproject(
-            hs,
-            resampled_hs,
-            src_transform=newaff,
-            dst_transform=src.affine,
-            src_crs=src.crs,
-            dst_crs=src.crs,
-            # resampling=Resampling.bilinear,
-            resampling=1,
-        )
-
-        hs = resampled_hs
-
+        # slices the non-buffered part of the generated hillshade out and returns it
         return hs[left_buffer:hs.shape[0] - right_buffer, top_buffer:hs.shape[1] - bottom_buffer]
 
 

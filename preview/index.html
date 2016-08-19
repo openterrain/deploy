@@ -15,6 +15,10 @@ body, #map {
   background-color: white;
   /*background-image: url(images/transparent.png);*/
 }
+.leaflet-tile-layer:nth-child(1) {
+  mix-blend-mode: multiply;
+  opacity: 1
+}
 </style>
 </head>
 <body>
@@ -31,7 +35,7 @@ body, #map {
   // L.tileLayer('http://hillshades.openterrain.org.s3-website-us-east-1.amazonaws.com/terrain-classic-features/{z}/{x}/{y}.png').addTo(map);
   // var provider = "http://tmp.openterrain.org.s3-website-us-east-1.amazonaws.com/terrain/{z}/{x}/{y}.png";
   // var provider = "http://tile.stamen.com/terrain-classic/{z}/{x}/{y}.png";
-  var provider = "http://tile.stamen.com.s3-website-us-east-1.amazonaws.com/terrain/{z}/{x}/{y}.png";
+  var provider = "http://localhost:8000/{z}/{x}/{y}.png";
 
   function getParameterByName(name) {
     name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
@@ -51,7 +55,16 @@ body, #map {
     provider = provider.replace(/\.(?!.*\.)/, "@2x.");
   }
 
+  L.tileLayer("http://{s}.tile.stamen.com/terrain-bg/{z}/{x}/{y}.png", {
+    opacity: 1
+  }).addTo(map);
   L.tileLayer(provider).addTo(map);
+  L.tileLayer("http://{s}.tile.stamen.com/terrain-features/{z}/{x}/{y}.png", {
+    opacity: 1
+  }).addTo(map);
+  L.tileLayer("http://{s}.tile.stamen.com/terrain-labels/{z}/{x}/{y}.png", {
+    opacity: 1
+  }).addTo(map);
 </script>
 </body>
 </html>

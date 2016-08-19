@@ -1,8 +1,12 @@
+import re
+from StringIO import StringIO
+
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.pyplot as plt
+from PIL import Image
 import rasterio
 
-from openterrain import render_hillshade, Tile
+from openterrain import MAX_ZOOM, render_hillshade, Tile
 
 POSITRON_RAMP = {
     "red": [(0.0, 0.0, 0.0),
@@ -68,6 +72,56 @@ def main():
         vmax=255,
         format="png",
     )
+
+def handle(event):
+    zoom = int(event["params"]["path"]["z"])
+    x = int(event["params"]["path"]["x"])
+    filename, format = event["params"]["path"]["y"].split(".")
+
+    parts = filename.split("@")
+    y = int(parts[0])
+    if len(parts) > 1:
+        scale = int(re.sub(r"[^\d]", "", parts[1]))
+    else:
+        scale = 1
+
+    tile = Tile(x, y, zoom)
+
+    if format != "png":
+        raise Exception("Invalid format")
+
+    if not 0 <= tile.z <= MAX_ZOOM:
+        raise Exception("Invalid zoom")
+
+    if not 0 < scale <= 2:
+        raise Exception("Invalid scale")
+
+    if not 0 <= tile.x < 2**tile.z:
+        raise Exception("Invalid coordinates")
+
+    if not 0 <= tile.y < 2**tile.z:
+        raise Exception("Invalid coordinates")
+
+    hs = render_hillshade(tile, resample=True)
+
+    out = StringIO()
+    plt.imsave(
+        out,
+        hs,
+        cmap=POSITRON,
+        # cmap=plt.get_cmap("Accent"), # use a default coloramp
+        vmin=0,
+        vmax=255,
+        format=format,
+    )
+
+    if scale == 1:
+        im = Image.open(out)
+        im.thumbnail((256, 256), Image.ANTIALIAS)
+        out = StringIO()
+        im.save(out, format)
+
+    return out.getvalue()
 
 
 if __name__ == "__main__":

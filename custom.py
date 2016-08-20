@@ -9,14 +9,14 @@ import rasterio
 from openterrain import MAX_ZOOM, render_hillshade, Tile
 
 POSITRON_RAMP = {
-    "red": [(0.0, 0.0, 0.0),
+    "red": [(0.0, 0.0, 0.3),
             (1.0, 1.0, 1.0)],
-    "green": [(0.0, 0.0, 0.0),
+    "green": [(0.0, 0.0, 0.3),
               (1.0, 1.0, 1.0)],
-    "blue": [(0.0, 0.0, 0.0),
+    "blue": [(0.0, 0.0, 0.3),
              (1.0, 1.0, 1.0)],
-    "alpha": [(0.0, 1.0, 1.0),
-              (180 / 255.0, 0.0, 0.0),
+    "alpha": [(0.0, 0.7, 0.7),
+              (195 / 255.0, 0.0, 0.0),
               (1.0, 1.0, 1.0)]
 }
 POSITRON = LinearSegmentedColormap("positron", POSITRON_RAMP)

@@ -15,9 +15,9 @@ body, #map {
   background-color: white;
   /*background-image: url(images/transparent.png);*/
 }
-.leaflet-tile-layer:nth-child(1) {
+.leaflet-layer:nth-child(2) {
   mix-blend-mode: multiply;
-  opacity: 0.8;
+  opacity: 1;
 }
 </style>
 </head>
@@ -65,6 +65,7 @@ body, #map {
   L.tileLayer("http://{s}.tile.stamen.com/terrain-labels/{z}/{x}/{y}.png", {
     opacity: 1
   }).addTo(map);
+
 </script>
 </body>
 </html>

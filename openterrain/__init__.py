@@ -56,12 +56,11 @@ RESAMPLING = {
     13: 0.9,
 }
 
-S3_BUCKET = os.environ["S3_BUCKET"]
-
 Tile = namedtuple("Tile", "x y z")
 
 
 def get_hillshade(tile, cache=True):
+    S3_BUCKET = os.environ["S3_BUCKET"]
     s3 = boto3.resource("s3")
 
     key = "3857/{}/{}/{}.tif".format(tile.z, tile.x, tile.y)
@@ -80,6 +79,49 @@ def get_hillshade(tile, cache=True):
 
         if cache:
             save_hillshade(tile, data=data, meta=meta)
+
+        return data
+
+
+def render_tile(tile, src_meta={}):
+    # do calculations in SRC_TILE_ZOOM space
+    dz = SRC_TILE_ZOOM - tile.z
+    x = 2**dz * tile.x
+    y = 2**dz * tile.y
+    mx = 2**dz * (tile.x + 1)
+    my = 2**dz * (tile.y + 1)
+    dx = mx - x
+    dy = my - y
+    top = (2**SRC_TILE_ZOOM * SRC_TILE_HEIGHT) - 1
+
+    # y, x (rows, columns)
+    # window is measured in pixels at SRC_TILE_ZOOM
+    window = [
+              [
+               top - (top - (SRC_TILE_HEIGHT * y)),
+               top - (top - ((SRC_TILE_HEIGHT * y) + int(SRC_TILE_HEIGHT * dy)))
+              ],
+              [
+               SRC_TILE_WIDTH * x,
+               (SRC_TILE_WIDTH * x) + int(SRC_TILE_WIDTH * dx)
+              ]
+             ]
+
+    # conversion factor from SRC_TILE_ZOOM to the target image
+    scale = 2**(dz + SRC_TILE_WIDTH / DST_TILE_WIDTH - 1)
+
+    with rasterio.open("out.vrt") as src:
+        # use decimated reads to read from overviews, per https://github.com/mapbox/rasterio/issues/710
+        data = np.empty(shape=(3, DST_TILE_WIDTH, DST_TILE_HEIGHT)).astype(src.profile["dtype"])
+        data = src.read(out=data, window=window)
+
+        src_meta.update(src.meta.copy())
+        del src_meta["transform"]
+        src_meta.update(dict(
+            height=DST_TILE_HEIGHT,
+            width=DST_TILE_WIDTH,
+            affine=src.window_transform(window)
+        ))
 
         return data
 
@@ -240,6 +282,8 @@ def render_hillshade(tile, src_meta={}, resample=True):
             # scale hillshade values (0.0-1.0) to integers (0-255)
             hs = (255.0 * hs).astype(np.uint8)
 
+
+
         src_meta.update(src.meta.copy())
         del src_meta["transform"]
         src_meta.update(dict(
@@ -253,6 +297,7 @@ def render_hillshade(tile, src_meta={}, resample=True):
 
 
 def save_hillshade(tile, data, meta):
+    S3_BUCKET = os.environ["S3_BUCKET"]
     s3 = boto3.resource("s3")
     meta.update(
         driver="GTiff",
@@ -338,7 +383,7 @@ def hillshade(elevation, azdeg=315, altdeg=45, vert_exag=1, dx=1, dy=1, fraction
     # Because most image and raster GIS data has the first row in the array
     # as the "top" of the image, dy is implicitly negative.  This is
     # consistent to what `imshow` assumes, as well.
-    dy = abs(dy)
+    dy = -abs(dy)
 
     # Calculate the intensity from the illumination angle
     dy, dx = np.gradient(vert_exag * elevation, dy, dx)
@@ -354,6 +399,7 @@ def hillshade(elevation, azdeg=315, altdeg=45, vert_exag=1, dx=1, dy=1, fraction
     intensity = np.clip(intensity, 0, 1, intensity)
 
     return intensity
+
 
 def slopeshade(elevation, vert_exag=1, dx=1, dy=1):
     # Calculate the intensity from the illumination angle

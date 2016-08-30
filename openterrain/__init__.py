@@ -178,8 +178,8 @@ def render_hillshade(tile, src_meta={}, resample=True, slopeshade=True):
                 resampling=1,
             )
 
-            dx = abs(newaff.a) * scale
-            dy = abs(newaff.e) * scale
+            dx = newaff.a * scale
+            dy = newaff.e * scale
 
             hs = hillshade(resampled,
                 dx=dx,
@@ -218,8 +218,8 @@ def render_hillshade(tile, src_meta={}, resample=True, slopeshade=True):
 
             hs = resampled_hs
         else:
-            dx = abs(src.affine.a) * scale
-            dy = abs(src.affine.e) * scale
+            dx = src.affine.a * scale
+            dy = src.affine.e * scale
 
             hs = hillshade(data,
                 dx=dx,
@@ -336,11 +336,6 @@ def hillshade(elevation, azdeg=315, altdeg=45, vert_exag=1, dx=1, dy=1, fraction
     # counterclockwise from East (mathematical notation).
     az = np.radians(90 - azdeg)
     alt = np.radians(altdeg)
-
-    # Because most image and raster GIS data has the first row in the array
-    # as the "top" of the image, dy is implicitly negative.  This is
-    # consistent to what `imshow` assumes, as well.
-    dy = abs(dy)
 
     # Calculate the intensity from the illumination angle
     dy, dx = np.gradient(vert_exag * elevation, dy, dx)

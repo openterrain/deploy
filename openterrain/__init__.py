@@ -9,6 +9,9 @@ import boto3
 import mercantile
 import numpy as np
 import rasterio
+from rasterio import Affine
+from rasterio.enums import Resampling
+from rasterio.warp import reproject
 from rasterio._io import virtual_file_to_buffer
 
 
@@ -42,11 +45,24 @@ EXAGGERATION = {
     14: 1.1,
 }
 
+RESAMPLING = {
+    5: 0.9,
+    6: 0.8,
+    7: 0.8,
+    8: 0.7,
+    9: 0.7,
+    10: 0.7,
+    11: 0.8,
+    12: 0.8,
+    13: 0.9,
+}
+
+S3_BUCKET = os.environ["S3_BUCKET"]
+
 Tile = namedtuple("Tile", "x y z")
 
 
 def get_hillshade(tile, cache=True):
-    S3_BUCKET = os.environ["S3_BUCKET"]
     s3 = boto3.resource("s3")
 
     key = "3857/{}/{}/{}.tif".format(tile.z, tile.x, tile.y)
@@ -69,7 +85,7 @@ def get_hillshade(tile, cache=True):
         return data
 
 
-def render_hillshade(tile, src_meta={}):
+def render_hillshade(tile, src_meta={}, resample=True, slopeshade=True):
     # do calculations in SRC_TILE_ZOOM space
     dz = SRC_TILE_ZOOM - tile.z
     x = 2**dz * tile.x
@@ -81,6 +97,7 @@ def render_hillshade(tile, src_meta={}):
     top = (2**SRC_TILE_ZOOM * SRC_TILE_HEIGHT) - 1
 
     # y, x (rows, columns)
+    # window is measured in pixels at SRC_TILE_ZOOM
     window = [
               [
                top - (top - (SRC_TILE_HEIGHT * y)),
@@ -109,9 +126,11 @@ def render_hillshade(tile, src_meta={}):
     if buffered_window[0][1] < top:
         bottom_buffer = BUFFER
 
+    # conversion factor from SRC_TILE_ZOOM to the target image
     scale = 2**(dz + SRC_TILE_WIDTH / DST_TILE_WIDTH - 1)
 
     # buffer so we have neighboring pixels
+    # scale so that BUFFER pixels @ SRC_TILE_ZOOM are converted to BUFFER pixels @ target zoom
     buffered_window[0][0] -= top_buffer * scale
     buffered_window[0][1] += bottom_buffer * scale
     buffered_window[1][0] -= left_buffer * scale
@@ -134,8 +153,95 @@ def render_hillshade(tile, src_meta={}):
         # convert to 2d array, rotate 270º, scale data
         data = data * np.rot90(np.atleast_2d(factors), 3)
 
-        dx = abs(src.affine.a) * scale
-        dy = abs(src.affine.e) * scale
+        resample_factor = RESAMPLING.get(tile.z, 1.0)
+
+        if resample and resample_factor != 1.0:
+            # resample data according to Tom Paterson's chart
+
+            aff = src.affine
+            # this is the equivalent of a scale transform (I think)
+            newaff = Affine(aff.a / resample_factor, aff.b, aff.c,
+                            aff.d, aff.e / resample_factor, aff.f)
+            # create an empty target array that's the shape of the resampled tile (e.g. 80% of 260x260px)
+            resampled = np.empty(shape=(round(data.shape[0] * resample_factor),
+                                     round(data.shape[1] * resample_factor)),
+                                 dtype=data.dtype)
+
+            # downsample using GDAL's reprojection functionality (which gives us access to different resampling algorithms)
+            reproject(
+                data,
+                resampled,
+                src_transform=src.affine,
+                dst_transform=newaff,
+                src_crs=src.crs,
+                dst_crs=src.crs,
+                # resampling=Resampling.bilinear,
+                resampling=1,
+            )
+
+            dx = newaff.a * scale
+            dy = newaff.e * scale
+
+            hs = hillshade(resampled,
+                dx=dx,
+                dy=dy,
+                vert_exag=EXAGGERATION.get(tile.z, 1.0),
+                # azdeg=315, # which direction is the light source coming from (north-south)
+                # altdeg=45, # what angle is the light source coming from (overhead-horizon)
+            )
+
+            if slopeshade:
+                ss = slopeshade(resampled,
+                    dx=dx,
+                    dy=dy,
+                    vert_exag=EXAGGERATION.get(tile.z, 1.0)
+                )
+
+                hs *= ss
+
+            # scale hillshade values (0.0-1.0) to integers (0-255)
+            hs = (255.0 * hs).astype(np.uint8)
+
+            # create an empty target array that's the shape of the target tile + buffers (e.g. 260x260px)
+            resampled_hs = np.empty(shape=data.shape, dtype=hs.dtype)
+
+            # upsample (invert the previous reprojection)
+            reproject(
+                hs,
+                resampled_hs,
+                src_transform=newaff,
+                dst_transform=src.affine,
+                src_crs=src.crs,
+                dst_crs=src.crs,
+                # resampling=Resampling.bilinear,
+                resampling=1,
+            )
+
+            hs = resampled_hs
+        else:
+            dx = src.affine.a * scale
+            dy = src.affine.e * scale
+
+            hs = hillshade(data,
+                dx=dx,
+                dy=dy,
+                vert_exag=EXAGGERATION.get(tile.z, 1.0),
+                # azdeg=315, # which direction is the light source coming from (north-south)
+                # altdeg=45, # what angle is the light source coming from (overhead-horizon)
+            )
+
+            if slopeshade:
+                ss = slopeshade(data,
+                    dx=dx,
+                    dy=dy,
+                    vert_exag=EXAGGERATION.get(tile.z, 1.0)
+                )
+
+                # hs *= 0.8
+                hs *= ss
+
+            # scale hillshade values (0.0-1.0) to integers (0-255)
+            hs = (255.0 * hs).astype(np.uint8)
 
         src_meta.update(src.meta.copy())
         del src_meta["transform"]
@@ -145,19 +251,11 @@ def render_hillshade(tile, src_meta={}):
             affine=src.window_transform(window) * Affine.scale(scale)
         ))
 
-        hs = hillshade(data,
-            dx=dx,
-            dy=dy,
-            vert_exag=EXAGGERATION.get(tile.z, 1.0),
-        )
-
-        hs = (255.0 * hs).astype(np.uint8)
-
+        # slices the non-buffered part of the generated hillshade out and returns it
         return hs[left_buffer:hs.shape[0] - right_buffer, top_buffer:hs.shape[1] - bottom_buffer]
 
 
 def save_hillshade(tile, data, meta):
-    S3_BUCKET = os.environ["S3_BUCKET"]
     s3 = boto3.resource("s3")
     meta.update(
         driver="GTiff",
@@ -240,11 +338,6 @@ def hillshade(elevation, azdeg=315, altdeg=45, vert_exag=1, dx=1, dy=1, fraction
     az = np.radians(90 - azdeg)
     alt = np.radians(altdeg)
 
-    # Because most image and raster GIS data has the first row in the array
-    # as the "top" of the image, dy is implicitly negative.  This is
-    # consistent to what `imshow` assumes, as well.
-    dy = -dy
-
     # Calculate the intensity from the illumination angle
     dy, dx = np.gradient(vert_exag * elevation, dy, dx)
     # The aspect is defined by the _downhill_ direction, thus the negative
@@ -259,3 +352,13 @@ def hillshade(elevation, azdeg=315, altdeg=45, vert_exag=1, dx=1, dy=1, fraction
     intensity = np.clip(intensity, 0, 1, intensity)
 
     return intensity
+
+def slopeshade(elevation, vert_exag=1, dx=1, dy=1):
+    # Calculate the intensity from the illumination angle
+    dy, dx = np.gradient(vert_exag * elevation, dy, dx)
+
+    slope = 0.5 * np.pi - np.arctan(np.hypot(dx, dy))
+
+    slope *= (1 / (np.pi / 2))
+
+    return slope

@@ -84,7 +84,7 @@ def get_hillshade(tile, cache=True):
         return data
 
 
-def render_hillshade(tile, src_meta={}, resample=True):
+def render_hillshade(tile, src_meta={}, resample=True, slopeshade=True):
     # do calculations in SRC_TILE_ZOOM space
     dz = SRC_TILE_ZOOM - tile.z
     x = 2**dz * tile.x
@@ -189,13 +189,14 @@ def render_hillshade(tile, src_meta={}, resample=True):
                 # altdeg=45, # what angle is the light source coming from (overhead-horizon)
             )
 
-            ss = slopeshade(resampled,
-                dx=dx,
-                dy=dy,
-                vert_exag=EXAGGERATION.get(tile.z, 1.0)
-            )
+            if slopeshade:
+                ss = slopeshade(resampled,
+                    dx=dx,
+                    dy=dy,
+                    vert_exag=EXAGGERATION.get(tile.z, 1.0)
+                )
 
-            hs *= ss
+                hs *= ss
 
             # scale hillshade values (0.0-1.0) to integers (0-255)
             hs = (255.0 * hs).astype(np.uint8)
@@ -228,14 +229,15 @@ def render_hillshade(tile, src_meta={}, resample=True):
                 # altdeg=45, # what angle is the light source coming from (overhead-horizon)
             )
 
-            ss = slopeshade(data,
-                dx=dx,
-                dy=dy,
-                vert_exag=EXAGGERATION.get(tile.z, 1.0)
-            )
+            if slopeshade:
+                ss = slopeshade(data,
+                    dx=dx,
+                    dy=dy,
+                    vert_exag=EXAGGERATION.get(tile.z, 1.0)
+                )
 
-            # hs *= 0.8
-            hs *= ss
+                # hs *= 0.8
+                hs *= ss
 
             # scale hillshade values (0.0-1.0) to integers (0-255)
             hs = (255.0 * hs).astype(np.uint8)

@@ -16,11 +16,11 @@ RUN \
 # Fetch PROJ.4
 
 RUN \
-  curl -L http://download.osgeo.org/proj/proj-4.9.1.tar.gz | tar zxf - -C /tmp
+  curl -L http://download.osgeo.org/proj/proj-4.9.2.tar.gz | tar zxf - -C /tmp
 
 # Build and install PROJ.4
 
-WORKDIR /tmp/proj-4.9.1
+WORKDIR /tmp/proj-4.9.2
 
 RUN \
   ./configure && \
@@ -30,11 +30,11 @@ RUN \
 # Fetch GDAL
 
 RUN \
-  curl -L http://download.osgeo.org/gdal/2.1.0/gdal-2.1.0.tar.gz | tar zxf - -C /tmp
+  curl -L http://download.osgeo.org/gdal/2.1.1/gdal-2.1.1.tar.gz | tar zxf - -C /tmp
 
 # Build + install GDAL
 
-WORKDIR /tmp/gdal-2.1.0
+WORKDIR /tmp/gdal-2.1.1
 
 RUN \
   ./configure \
@@ -80,10 +80,10 @@ RUN \
 WORKDIR /usr/local
 
 RUN \
-  strip lib/libgdal.so.20.1.0
+  strip lib/libgdal.so.20.1.1
 
 RUN \
-  strip lib/libproj.so.9.0.0
+  strip lib/libproj.so.9.1.0
 
 RUN \
   zip --symlinks \

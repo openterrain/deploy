@@ -1,4 +1,4 @@
-from custom import handle
+from mpgranch import handle
 
 def app(environ, start_response):
     """Simplest possible application object"""

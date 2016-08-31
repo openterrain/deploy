@@ -1,18 +1,18 @@
 import re
 from StringIO import StringIO
 from PIL import Image
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
 import rasterio
 
-from openterrain import render_tile, Tile
+from openterrain import MAX_ZOOM, render_tile, Tile
 
 def main():
     meta = {}
     #15/6009/11565
     #20/192292/370086
     # data = render_tile(Tile(6009, 11565, 15), src_meta=meta)
-    data = render_tile(Tile(192292, 370086, 20), src_meta=meta)
+    data = render_tile(Tile(192292 / 2, 370086 / 2, 19), src_meta=meta)
 
     meta.update(
         driver="GTiff",
@@ -33,11 +33,11 @@ def main():
     print imgarr.shape
 
     # TODO dtype is uint16
-    plt.imsave(
-        "mpgranch.png",
-        imgarr,
-        format="png",
-    )
+    # plt.imsave(
+    #     "mpgranch.png",
+    #     imgarr,
+    #     format="png",
+    # )
 
     im = Image.fromarray(imgarr, 'RGB')
     im.save("mpgranch2.png")
@@ -71,18 +71,12 @@ def handle(event):
     if not 0 <= tile.y < 2**tile.z:
         raise Exception("Invalid coordinates")
 
-    hs = render_hillshade(tile, resample=True)
+    data = render_tile(tile)
+    imgarr = np.ma.transpose(data, [1, 2, 0]).astype(np.uint8)
 
     out = StringIO()
-    plt.imsave(
-        out,
-        hs,
-        cmap=POSITRON,
-        # cmap=plt.get_cmap("Accent"), # use a default coloramp
-        vmin=0,
-        vmax=255,
-        format=format,
-    )
+    im = Image.fromarray(imgarr, "RGB")
+    im.save(out, format)
 
     if scale == 1:
         im = Image.open(out)

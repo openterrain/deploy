@@ -24,7 +24,7 @@ body, #map {
 <body>
 <div id="map"></div>
 <script>
-  var map = L.map('map').setView([46.142, -119.399], 6);
+  var map = L.map('map').setView([46.6987, -114.009], 19);
 
   var hash = new L.Hash(map);
   L.control.geocoder("search-979dyct").addTo(map);
@@ -55,16 +55,18 @@ body, #map {
     provider = provider.replace(/\.(?!.*\.)/, "@2x.");
   }
 
-  L.tileLayer("http://{s}.tile.stamen.com/terrain-bg/{z}/{x}/{y}.png", {
-    opacity: 1
+  // L.tileLayer("http://{s}.tile.stamen.com/terrain-bg/{z}/{x}/{y}.png", {
+  //   opacity: 1
+  // }).addTo(map);
+  L.tileLayer(provider, {
+    maxZoom: 19
   }).addTo(map);
-  L.tileLayer(provider).addTo(map);
-  L.tileLayer("http://{s}.tile.stamen.com/terrain-features/{z}/{x}/{y}.png", {
-    opacity: 1
-  }).addTo(map);
-  L.tileLayer("http://{s}.tile.stamen.com/terrain-labels/{z}/{x}/{y}.png", {
-    opacity: 1
-  }).addTo(map);
+  // L.tileLayer("http://{s}.tile.stamen.com/terrain-features/{z}/{x}/{y}.png", {
+  //   opacity: 1
+  // }).addTo(map);
+  // L.tileLayer("http://{s}.tile.stamen.com/terrain-labels/{z}/{x}/{y}.png", {
+  //   opacity: 1
+  // }).addTo(map);
 
 </script>
 </body>

@@ -83,6 +83,8 @@ def get_hillshade(tile, cache=True):
         return data
 
 
+src = rasterio.open("out.vrt")
+
 def render_tile(tile, src_meta={}):
     # do calculations in SRC_TILE_ZOOM space
     dz = SRC_TILE_ZOOM - tile.z
@@ -110,20 +112,19 @@ def render_tile(tile, src_meta={}):
     # conversion factor from SRC_TILE_ZOOM to the target image
     scale = 2**(dz + SRC_TILE_WIDTH / DST_TILE_WIDTH - 1)
 
-    with rasterio.open("out.vrt") as src:
-        # use decimated reads to read from overviews, per https://github.com/mapbox/rasterio/issues/710
-        data = np.empty(shape=(3, DST_TILE_WIDTH, DST_TILE_HEIGHT)).astype(src.profile["dtype"])
-        data = src.read(out=data, window=window)
+    # use decimated reads to read from overviews, per https://github.com/mapbox/rasterio/issues/710
+    data = np.empty(shape=(3, DST_TILE_WIDTH, DST_TILE_HEIGHT)).astype(src.profile["dtype"])
+    data = src.read(out=data, window=window)
 
-        src_meta.update(src.meta.copy())
-        del src_meta["transform"]
-        src_meta.update(dict(
-            height=DST_TILE_HEIGHT,
-            width=DST_TILE_WIDTH,
-            affine=src.window_transform(window)
-        ))
+    src_meta.update(src.meta.copy())
+    del src_meta["transform"]
+    src_meta.update(dict(
+        height=DST_TILE_HEIGHT,
+        width=DST_TILE_WIDTH,
+        affine=src.window_transform(window)
+    ))
 
-        return data
+    return data
 
 
 def render_hillshade(tile, src_meta={}, resample=True):

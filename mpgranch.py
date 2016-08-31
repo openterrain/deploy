@@ -75,7 +75,7 @@ def handle(event):
     imgarr = np.ma.transpose(data, [1, 2, 0]).astype(np.uint8)
 
     out = StringIO()
-    im = Image.fromarray(imgarr, "RGB")
+    im = Image.fromarray(imgarr, "RGBA")
     im.save(out, format)
 
     if scale == 1:

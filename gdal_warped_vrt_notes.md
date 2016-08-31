@@ -9,8 +9,8 @@ gdalwarp /vsicurl/http://data.stamen.com.s3.amazonaws.com/mpgranch/imagery/2016_
   -r cubic -overwrite -of VRT
 ```
 
-zoom 19
+zoom 19, include an alpha channel to prevent black cuffs
 
 ```bash
-gdalwarp 2015_c.tif out.vrt -t_srs EPSG:3857 -r cubic -overwrite -of VRT -te -20037508.34 -20037508.34 20037508.34 20037508.34 -ts 134217728 134217728
+gdalwarp 2015_c.tif out.vrt -t_srs EPSG:3857 -r cubic -overwrite -of VRT -te -20037508.34 -20037508.34 20037508.34 20037508.34 -ts 134217728 134217728 -srcnodata None -dstalpha
 ```

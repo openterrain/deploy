@@ -113,7 +113,7 @@ def render_tile(tile, src_meta={}):
     scale = 2**(dz + SRC_TILE_WIDTH / DST_TILE_WIDTH - 1)
 
     # use decimated reads to read from overviews, per https://github.com/mapbox/rasterio/issues/710
-    data = np.empty(shape=(3, DST_TILE_WIDTH, DST_TILE_HEIGHT)).astype(src.profile["dtype"])
+    data = np.empty(shape=(4, DST_TILE_WIDTH, DST_TILE_HEIGHT)).astype(src.profile["dtype"])
     data = src.read(out=data, window=window)
 
     src_meta.update(src.meta.copy())

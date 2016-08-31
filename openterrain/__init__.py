@@ -25,6 +25,7 @@ DST_TILE_WIDTH = 512
 DST_TILE_HEIGHT = 512
 DST_BLOCK_SIZE = 256
 TMP_PATH = "/vsimem/tmp-{}".format(os.getpid())
+SRC = rasterio.open("mapzen.xml")
 
 # from http://www.shadedrelief.com/web_relief/
 EXAGGERATION = {
@@ -136,123 +137,122 @@ def render_hillshade(tile, src_meta={}, resample=True, slopeshade=True):
     buffered_window[1][0] -= left_buffer * scale
     buffered_window[1][1] += right_buffer * scale
 
-    with rasterio.open("mapzen.xml") as src:
-        # use decimated reads to read from overviews, per https://github.com/mapbox/rasterio/issues/710
-        data = np.empty(shape=(DST_TILE_WIDTH + left_buffer + right_buffer, DST_TILE_HEIGHT + top_buffer + bottom_buffer)).astype(src.profile["dtype"])
-        data = src.read(1, out=data, window=buffered_window)
+    # use decimated reads to read from overviews, per https://github.com/mapbox/rasterio/issues/710
+    data = np.empty(shape=(DST_TILE_WIDTH + left_buffer + right_buffer, DST_TILE_HEIGHT + top_buffer + bottom_buffer)).astype(SRC.profile["dtype"])
+    data = SRC.read(1, out=data, window=buffered_window)
 
-        # scale data
+    # scale data
 
-        # interpolate latitudes
-        bounds = mercantile.bounds(tile.x, tile.y, tile.z)
-        height = data.shape[0]
-        latitudes = np.interp(np.arange(height), [top_buffer, height - bottom_buffer - 1], [bounds.north, bounds.south])
+    # interpolate latitudes
+    bounds = mercantile.bounds(tile.x, tile.y, tile.z)
+    height = data.shape[0]
+    latitudes = np.interp(np.arange(height), [top_buffer, height - bottom_buffer - 1], [bounds.north, bounds.south])
 
-        factors = 1 / np.cos(np.radians(latitudes))
+    factors = 1 / np.cos(np.radians(latitudes))
 
-        # convert to 2d array, rotate 270º, scale data
-        data = data * np.rot90(np.atleast_2d(factors), 3)
+    # convert to 2d array, rotate 270º, scale data
+    data = data * np.rot90(np.atleast_2d(factors), 3)
 
-        resample_factor = RESAMPLING.get(tile.z, 1.0)
+    resample_factor = RESAMPLING.get(tile.z, 1.0)
 
-        if resample and resample_factor != 1.0:
-            # resample data according to Tom Paterson's chart
+    if resample and resample_factor != 1.0:
+        # resample data according to Tom Paterson's chart
 
-            aff = src.affine
-            # this is the equivalent of a scale transform (I think)
-            newaff = Affine(aff.a / resample_factor, aff.b, aff.c,
-                            aff.d, aff.e / resample_factor, aff.f)
-            # create an empty target array that's the shape of the resampled tile (e.g. 80% of 260x260px)
-            resampled = np.empty(shape=(round(data.shape[0] * resample_factor),
-                                     round(data.shape[1] * resample_factor)),
-                                 dtype=data.dtype)
+        aff = SRC.affine
+        # this is the equivalent of a scale transform (I think)
+        newaff = Affine(aff.a / resample_factor, aff.b, aff.c,
+                        aff.d, aff.e / resample_factor, aff.f)
+        # create an empty target array that's the shape of the resampled tile (e.g. 80% of 260x260px)
+        resampled = np.empty(shape=(round(data.shape[0] * resample_factor),
+                                 round(data.shape[1] * resample_factor)),
+                             dtype=data.dtype)
 
-            # downsample using GDAL's reprojection functionality (which gives us access to different resampling algorithms)
-            reproject(
-                data,
-                resampled,
-                src_transform=src.affine,
-                dst_transform=newaff,
-                src_crs=src.crs,
-                dst_crs=src.crs,
-                # resampling=Resampling.bilinear,
-                resampling=1,
-            )
+        # downsample using GDAL's reprojection functionality (which gives us access to different resampling algorithms)
+        reproject(
+            data,
+            resampled,
+            src_transform=SRC.affine,
+            dst_transform=newaff,
+            src_crs=SRC.crs,
+            dst_crs=SRC.crs,
+            # resampling=Resampling.bilinear,
+            resampling=1,
+        )
 
-            dx = newaff.a * scale
-            dy = newaff.e * scale
+        dx = newaff.a * scale
+        dy = newaff.e * scale
 
-            hs = hillshade(resampled,
+        hs = hillshade(resampled,
+            dx=dx,
+            dy=dy,
+            vert_exag=EXAGGERATION.get(tile.z, 1.0),
+            # azdeg=315, # which direction is the light source coming from (north-south)
+            # altdeg=45, # what angle is the light source coming from (overhead-horizon)
+        )
+
+        if slopeshade:
+            ss = slopeshade(resampled,
                 dx=dx,
                 dy=dy,
-                vert_exag=EXAGGERATION.get(tile.z, 1.0),
-                # azdeg=315, # which direction is the light source coming from (north-south)
-                # altdeg=45, # what angle is the light source coming from (overhead-horizon)
+                vert_exag=EXAGGERATION.get(tile.z, 1.0)
             )
 
-            if slopeshade:
-                ss = slopeshade(resampled,
-                    dx=dx,
-                    dy=dy,
-                    vert_exag=EXAGGERATION.get(tile.z, 1.0)
-                )
+            hs *= ss
 
-                hs *= ss
+        # scale hillshade values (0.0-1.0) to integers (0-255)
+        hs = (255.0 * hs).astype(np.uint8)
 
-            # scale hillshade values (0.0-1.0) to integers (0-255)
-            hs = (255.0 * hs).astype(np.uint8)
+        # create an empty target array that's the shape of the target tile + buffers (e.g. 260x260px)
+        resampled_hs = np.empty(shape=data.shape, dtype=hs.dtype)
 
-            # create an empty target array that's the shape of the target tile + buffers (e.g. 260x260px)
-            resampled_hs = np.empty(shape=data.shape, dtype=hs.dtype)
+        # upsample (invert the previous reprojection)
+        reproject(
+            hs,
+            resampled_hs,
+            src_transform=newaff,
+            dst_transform=SRC.affine,
+            src_crs=SRC.crs,
+            dst_crs=SRC.crs,
+            # resampling=Resampling.bilinear,
+            resampling=1,
+        )
 
-            # upsample (invert the previous reprojection)
-            reproject(
-                hs,
-                resampled_hs,
-                src_transform=newaff,
-                dst_transform=src.affine,
-                src_crs=src.crs,
-                dst_crs=src.crs,
-                # resampling=Resampling.bilinear,
-                resampling=1,
-            )
+        hs = resampled_hs
+    else:
+        dx = SRC.affine.a * scale
+        dy = SRC.affine.e * scale
 
-            hs = resampled_hs
-        else:
-            dx = src.affine.a * scale
-            dy = src.affine.e * scale
+        hs = hillshade(data,
+            dx=dx,
+            dy=dy,
+            vert_exag=EXAGGERATION.get(tile.z, 1.0),
+            # azdeg=315, # which direction is the light source coming from (north-south)
+            # altdeg=45, # what angle is the light source coming from (overhead-horizon)
+        )
 
-            hs = hillshade(data,
+        if slopeshade:
+            ss = slopeshade(data,
                 dx=dx,
                 dy=dy,
-                vert_exag=EXAGGERATION.get(tile.z, 1.0),
-                # azdeg=315, # which direction is the light source coming from (north-south)
-                # altdeg=45, # what angle is the light source coming from (overhead-horizon)
+                vert_exag=EXAGGERATION.get(tile.z, 1.0)
             )
 
-            if slopeshade:
-                ss = slopeshade(data,
-                    dx=dx,
-                    dy=dy,
-                    vert_exag=EXAGGERATION.get(tile.z, 1.0)
-                )
+            # hs *= 0.8
+            hs *= ss
 
-                # hs *= 0.8
-                hs *= ss
+        # scale hillshade values (0.0-1.0) to integers (0-255)
+        hs = (255.0 * hs).astype(np.uint8)
 
-            # scale hillshade values (0.0-1.0) to integers (0-255)
-            hs = (255.0 * hs).astype(np.uint8)
+    src_meta.update(SRC.meta.copy())
+    del src_meta["transform"]
+    src_meta.update(dict(
+        height=DST_TILE_HEIGHT,
+        width=DST_TILE_WIDTH,
+        affine=SRC.window_transform(window) * Affine.scale(scale)
+    ))
 
-        src_meta.update(src.meta.copy())
-        del src_meta["transform"]
-        src_meta.update(dict(
-            height=DST_TILE_HEIGHT,
-            width=DST_TILE_WIDTH,
-            affine=src.window_transform(window) * Affine.scale(scale)
-        ))
-
-        # slices the non-buffered part of the generated hillshade out and returns it
-        return hs[left_buffer:hs.shape[0] - right_buffer, top_buffer:hs.shape[1] - bottom_buffer]
+    # slices the non-buffered part of the generated hillshade out and returns it
+    return hs[left_buffer:hs.shape[0] - right_buffer, top_buffer:hs.shape[1] - bottom_buffer]
 
 
 def save_hillshade(tile, data, meta):

@@ -3,6 +3,9 @@ import re
 from StringIO import StringIO
 
 import boto3
+import matplotlib
+matplotlib.use("Agg")
+
 from matplotlib.colors import LinearSegmentedColormap
 import matplotlib.pyplot as plt
 from PIL import Image

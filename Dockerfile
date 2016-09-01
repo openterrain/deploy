@@ -93,10 +93,15 @@ RUN \
 
 WORKDIR /var/task
 
+# initialize the matplotlib font cache
+RUN \
+  python -c 'import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot'
+
 RUN \
   zip --symlinks \
     -r9 /tmp/task.zip \
-    share/gdal/
+    share/gdal/ \
+    .cache/matplotlib/
 
 # Add Python deps to the function zip
 

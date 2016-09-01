@@ -19,8 +19,8 @@ const SOURCE = {
             maxzoom: 15
           }
         },
-        "comp-op": "hard-light",
-        opacity: "0.6"
+        "comp-op": "multiply",
+        opacity: "1"
       },
       {
         source: "http://tile.stamen.com.s3-website-us-east-1.amazonaws.com/terrain-water/{z}/{x}/{y}.png",

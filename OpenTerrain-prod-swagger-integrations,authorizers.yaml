@@ -37,6 +37,8 @@ paths:
               type: "string"
             Content-Type:
               type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
         502:
           description: "502 response"
         404:
@@ -48,6 +50,7 @@ paths:
             responseParameters:
               method.response.header.Content-Type: "'text/plain'"
               method.response.header.Location: "integration.response.body.location"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
             responseTemplates:
               application/json: "#set($inputRoot = $input.path('$'))\n"
           Invalid.+:
@@ -122,6 +125,8 @@ paths:
               type: "string"
             Content-Type:
               type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
         502:
           description: "502 response"
         404:
@@ -133,6 +138,7 @@ paths:
             responseParameters:
               method.response.header.Content-Type: "'text/plain'"
               method.response.header.Location: "integration.response.body.location"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
             responseTemplates:
               application/json: "#set($inputRoot = $input.path('$'))"
           Invalid.+:
@@ -207,6 +213,8 @@ paths:
               type: "string"
             Content-Type:
               type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
         502:
           description: "502 response"
         404:
@@ -218,6 +226,7 @@ paths:
             responseParameters:
               method.response.header.Content-Type: "'text/plain'"
               method.response.header.Location: "integration.response.body.location"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
             responseTemplates:
               application/json: "#set($inputRoot = $input.path('$'))"
           Invalid.+:
@@ -292,6 +301,8 @@ paths:
               type: "string"
             Content-Type:
               type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
         502:
           description: "502 response"
         404:
@@ -303,6 +314,7 @@ paths:
             responseParameters:
               method.response.header.Content-Type: "'text/plain'"
               method.response.header.Location: "integration.response.body.location"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
             responseTemplates:
               application/json: "#set($inputRoot = $input.path('$'))"
           .+:
@@ -371,6 +383,8 @@ paths:
               type: "string"
             Content-Type:
               type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
         502:
           description: "502 response"
         404:
@@ -382,6 +396,7 @@ paths:
             responseParameters:
               method.response.header.Content-Type: "'text/plain'"
               method.response.header.Location: "integration.response.body.location"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
             responseTemplates:
               application/json: "#set($inputRoot = $input.path('$'))"
           .+:
@@ -450,6 +465,8 @@ paths:
               type: "string"
             Content-Type:
               type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
         502:
           description: "502 response"
         404:
@@ -461,6 +478,7 @@ paths:
             responseParameters:
               method.response.header.Content-Type: "'text/plain'"
               method.response.header.Location: "integration.response.body.location"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
             responseTemplates:
               application/json: "#set($inputRoot = $input.path('$'))"
           .+:
@@ -529,6 +547,8 @@ paths:
               type: "string"
             Content-Type:
               type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
         502:
           description: "502 response"
         404:
@@ -540,6 +560,7 @@ paths:
             responseParameters:
               method.response.header.Content-Type: "'text/plain'"
               method.response.header.Location: "integration.response.body.location"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
             responseTemplates:
               application/json: "#set($inputRoot = $input.path('$'))"
           .+:
@@ -608,6 +629,8 @@ paths:
               type: "string"
             Content-Type:
               type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
         502:
           description: "502 response"
         404:
@@ -619,6 +642,7 @@ paths:
             responseParameters:
               method.response.header.Content-Type: "'text/plain'"
               method.response.header.Location: "integration.response.body.location"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
             responseTemplates:
               application/json: "#set($inputRoot = $input.path('$'))"
           .+:
@@ -687,6 +711,8 @@ paths:
               type: "string"
             Content-Type:
               type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
         502:
           description: "502 response"
         404:
@@ -698,6 +724,7 @@ paths:
             responseParameters:
               method.response.header.Content-Type: "'text/plain'"
               method.response.header.Location: "integration.response.body.location"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
             responseTemplates:
               application/json: "#set($inputRoot = $input.path('$'))"
           .+:
@@ -766,6 +793,8 @@ paths:
               type: "string"
             Content-Type:
               type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
         502:
           description: "502 response"
         404:
@@ -777,6 +806,7 @@ paths:
             responseParameters:
               method.response.header.Content-Type: "'text/plain'"
               method.response.header.Location: "integration.response.body.location"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
             responseTemplates:
               application/json: "#set($inputRoot = $input.path('$'))"
           .+:
@@ -845,6 +875,8 @@ paths:
               type: "string"
             Content-Type:
               type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
         502:
           description: "502 response"
         404:
@@ -856,6 +888,7 @@ paths:
             responseParameters:
               method.response.header.Content-Type: "'text/plain'"
               method.response.header.Location: "integration.response.body.location"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
             responseTemplates:
               application/json: "#set($inputRoot = $input.path('$'))"
           .+:
@@ -924,6 +957,8 @@ paths:
               type: "string"
             Content-Type:
               type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
         502:
           description: "502 response"
         404:
@@ -935,6 +970,7 @@ paths:
             responseParameters:
               method.response.header.Content-Type: "'text/plain'"
               method.response.header.Location: "integration.response.body.location"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
             responseTemplates:
               application/json: "#set($inputRoot = $input.path('$'))"
           .+:
@@ -1007,6 +1043,8 @@ paths:
               type: "string"
             Content-Type:
               type: "string"
+            Access-Control-Allow-Origin:
+              type: "string"
         502:
           description: "502 response"
         404:
@@ -1018,6 +1056,7 @@ paths:
             responseParameters:
               method.response.header.Content-Type: "'text/plain'"
               method.response.header.Location: "integration.response.body.location"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
             responseTemplates:
               application/json: "#set($inputRoot = $input.path('$'))"
           .+:
